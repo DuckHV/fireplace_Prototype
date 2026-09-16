@@ -4,7 +4,7 @@
 using namespace std;
 
 int main() {
-    ifstream File ("try2-short.txt");
+    ifstream File ("try3-short.txt");
     fstream New;
     string tick;
     string rest;
