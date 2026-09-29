@@ -59,13 +59,14 @@ int main() {
     string firstline;
     // sort out relevant info
     //    9000: system.cpu: T0 : 0x80000034 @_try_lottery+10. 0 : amoswap_w[l] a6, a7, (a6)  : MemRead :  D=0x0000000000000000 A=0x80040000
-    //      |        |      |                  |                           |                      |                |                 |
-    //     tick    place  thread            register                   instruction             operation          data             address
+    //      |        |      |         |               |                     |                      |                |                 |
+    //     tick    place  thread   register       gem5name               instruction            operation          data             address
 
     string tick;
     string place;
     string thread;
     string regist;
+    string gem5name;
     string task;
     string instruction;
     //string operation;
@@ -95,7 +96,11 @@ int main() {
         
         getline(Log, place, ':'); // get place
         getline(Log, thread, ':'); // get thread
-        getline(Log, regist, ':'); // register
+        getline(Log, regist, ':'); // register, have to separate name again
+        if (regist.find("@") != string::npos){
+            gem5name = regist.substr(regist.find("@") + 1);
+            regist.resize(regist.find("@"));
+        }
         getline(Log, instruction, ':'); // instruction
         //getline(Log, operation, ':'); // operation
         //getline(Log, data, ':'); // data
@@ -116,15 +121,15 @@ int main() {
         getline(addr2line, symbol); //2nd line has symbol,
 
         //string to size_t
-        stringstream addrstream(fulladdr);
-        size_t addr;
-        addrstream >> addr; // returns 0
-        size_t addr2 = std::stoul(fulladdr, nullptr, 16);
-        //New << fulladdr<< "|" << std::stoul(fulladdr, nullptr, 16) <<  "|" << addr <<  "|" << addr2 << "\n";
+        //stringstream addrstream(fulladdr);
+        //size_t addr;
+        //addrstream >> addr; // returns 0
+        size_t addr = std::stoul(fulladdr, nullptr, 16);
         //stringstream addrstream;
         //size_t addr;
         //addrstream << std::hex << fulladdr;
-        //addstream >> addr;
+        //addrstream >> addr;
+        //New << fulladdr<< "|" << std::stoul(fulladdr, nullptr, 16) <<  "|" << addr <<  "|" << addr2 << "\n";
 
         //stack call on thread
         Call call;
@@ -152,18 +157,25 @@ int main() {
             //system("rm address-1.txt");
             if (symbol != symbolcheck){// it's a beginning, a beginning means a jump to new func
                 //New << "jump" << "|" << symbol << "|" << symbolcheck << "\n";
-                New << "jump" << "\n";
-                thread_curr.stack.push_back(call);
-                thread_curr.switched = 0;
-                thread_curr.last_addr = addr;
-                thread_curr.last_func = addr; //this should be the beginning of the former function
-                // add case for older func ends, newer func begins
+                if (symbolcheck == thread_curr.stack.back().func){ //old func (at fulladdr - 1) continues into new func (at fulladdr)
+                    New << "continue" << "\n";
+                    thread_curr.stack.pop_back();
+                } else { //it was a big jump
+                    New << "jump" << "\n";
+                }
+                    thread_curr.stack.push_back(call);
+                    thread_curr.switched = 0;
+                    thread_curr.last_addr = addr;
+                    thread_curr.last_func = addr; //this should be the beginning of the former function
+                    // add case for older func ends, newer func begins
+                
             } else { //current func jumps to former 
-                New << "return";
+                New << "return" << "\n";
                 thread_curr.stack.pop_back();
                 thread_curr.switched = 0;
                 thread_curr.last_addr = addr;
-                thread_curr.last_func = addr;               
+                thread_curr.last_func = addr;   
+                // add cond for current func ends and new func starts            
             }
         } else {
             continue;
