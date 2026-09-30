@@ -46,6 +46,12 @@ struct Thread{
     unsigned long long switched;
     size_t last_func;
     size_t last_addr;
+    //Thread() = default;
+    void popstack (unsigned long long time) {
+        unsigned long long duration = time - stack.back().time;
+        stack.pop_back();
+        stack.back().child_duration += duration;
+    }
 };
 
 
@@ -79,6 +85,7 @@ int main() {
 
     //map<string, int> //
     Thread thread_curr;
+    Call call;
 
     cout << "Input path to Log: " ; // same folder "try2-short.txt", different folder "./input/try2-short.txt"
     getline(cin, pathLog);
@@ -92,8 +99,10 @@ int main() {
 
     New.open("OutputStack.txt", fstream::out);
 
-    while (getline(Log, tick, ':') && stoul(tick) <= 1300000){ // get tick, till first :
+    while (getline(Log, tick, ':') && stoul(tick) <= 3816500){ // get tick, till first :
         
+        unsigned long long longTick = stoul(tick);
+
         getline(Log, place, ':'); // get place
         getline(Log, thread, ':'); // get thread
         getline(Log, regist, ':'); // register, have to separate name again
@@ -119,7 +128,7 @@ int main() {
         string symbol;
         getline(addr2line, fulladdr);
         getline(addr2line, symbol); //2nd line has symbol,
-
+        system("rm address.txt");//remove address.txt
         //string to size_t
         //stringstream addrstream(fulladdr);
         //size_t addr;
@@ -132,9 +141,8 @@ int main() {
         //New << fulladdr<< "|" << std::stoul(fulladdr, nullptr, 16) <<  "|" << addr <<  "|" << addr2 << "\n";
 
         //stack call on thread
-        Call call;
-        call = (Call){symbol, addr, 0, 0 ,0};
         if (thread_curr.stack.size() == 0){ //beginn stack
+            call = (Call){symbol, addr, longTick, longTick, 0};
             thread_curr.stack.push_back(call);
             thread_curr.switched = 0;
             thread_curr.last_addr = addr;
@@ -154,34 +162,57 @@ int main() {
             string symbolcheck;
             getline(addr2linecheck, fulladdrcheck);
             getline(addr2linecheck, symbolcheck);
-            //system("rm address-1.txt");
+            system("rm address-1.txt");
+
             if (symbol != symbolcheck){// it's a beginning, a beginning means a jump to new func
                 //New << "jump" << "|" << symbol << "|" << symbolcheck << "\n";
-                if (symbolcheck == thread_curr.stack.back().func){ //old func (at fulladdr - 1) continues into new func (at fulladdr)
+                if (symbolcheck == thread_curr.stack.back().func){ //old func (at fulladdr - 1) continues into new func (at fulladdr = addr)
                     New << "continue" << "\n";
-                    thread_curr.stack.pop_back();
+                    if (thread_curr.stack.size() == 0){
+                    } else {
+                    New << tick << "|" << thread_curr.stack[0].func;
+                    for (int i = 1; i < thread_curr.stack.size(); i++) {
+                        New << ";";
+                        New << thread_curr.stack[i].func;
+                    }
+                    New << "|" << thread_curr.stack.back().time << "|" << thread_curr.stack.back().child_duration;
+                    New << "|" << longTick - (thread_curr.stack.back().time + thread_curr.stack.back().child_duration);
+                    New << "\n";
+                    }
+                    thread_curr.popstack(longTick);
                 } else { //it was a big jump
                     New << "jump" << "\n";
                 }
+                    call = (Call){symbol, addr, longTick, longTick, 0};
                     thread_curr.stack.push_back(call);
                     thread_curr.switched = 0;
                     thread_curr.last_addr = addr;
-                    thread_curr.last_func = addr; //this should be the beginning of the former function
-                    // add case for older func ends, newer func begins
+                    thread_curr.last_func = addr; 
                 
-            } else { //current func jumps to former 
+            } else { //current func returns to former func
                 New << "return" << "\n";
-                thread_curr.stack.pop_back();
+                if (thread_curr.stack.size() == 0){
+                } else {
+                    New << tick << "|" << thread_curr.stack[0].func;
+                    for (int i = 1; i < thread_curr.stack.size(); i++) {
+                        New << ";";
+                        New << thread_curr.stack[i].func;
+                    }
+                    New << "|" << thread_curr.stack.back().time << "|" << thread_curr.stack.back().child_duration;
+                    New << "|" << longTick - (thread_curr.stack.back().time + thread_curr.stack.back().child_duration);
+                    New << "\n";
+                }
+                thread_curr.popstack(longTick);
                 thread_curr.switched = 0;
                 thread_curr.last_addr = addr;
-                thread_curr.last_func = addr;   
-                // add cond for current func ends and new func starts            
+                thread_curr.last_func = addr; // where old last_func from (?buffer) //this should be the beginning of the former function 
             }
         } else {
-            continue;
+            continue; //also skips the print
         }
         
-        //print stack every cycle 
+        /*
+        //print stack every cycle, when a change in stack happened
         if (thread_curr.stack.size() == 0){
             continue;
         } else {
@@ -190,60 +221,12 @@ int main() {
             New << ";";
             New << thread_curr.stack[i].func;
         }
+        New << "|" << thread_curr.stack.back().time << "|" << thread_curr.stack.back().child_duration;
+        New << "|" << longTick - (thread_curr.stack.back().time + thread_curr.stack.back().child_duration);
         New << "\n";
         }
-
-        //remove address.txt
-        system("rm address.txt");
-        /* 1 thread -> 1 stack
-
-        while (getline(Log, tick, ':')) // till end of Log
-
-        [...]
-        void stacker (string addr = 0x80000000, Thread thread) // first find name, then make stack
-            
-            String cmd = "addr2line -f -a -i  -b elf64-big -e fw_payload.elf %s| tee address.txt" //  not tee -> write only to file, not stdout
-            system(String.format(cmd, addr))
-            
-            ifstream addr2line ("address.txt")
-            vector <string> stack
-
-            getline(addr2line, fulladdr)
-            getline(addr2line, symbol) //2nd line has symbol,
-
-            if (stack.empty())
-            string old_name = symbol
-            stack.push_back(symbol)
-            else
-                if (old_name == symbol)
-                    nothing
-                else 
-                    stack.push_back(;)
-                    stack.push_back(symbol)
-
-            system("rm address.txt")
-
-        //
         */
 
-        /*
-        if !thread.stack.is_empty() {
-        // generate stack
-        let stack = match mode {
-            crate::Mode::FlameGraph { start, .. } if time >= start => {
-                use std::fmt::Write;
-                let mut stack: String = format!("{}", tile);
-                stack.push(';');
-                write!(stack, "{}", tid).unwrap();
-                for f in thread.stack.iter() {
-                    stack.push(';');
-                    stack.push_str(f.func);
-                }
-                Some(stack)
-            },
-            _ => None,
-        };
-        */
     }
     Log.close();
     New.close();
