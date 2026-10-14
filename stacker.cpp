@@ -59,8 +59,12 @@ struct Thread{
 int main() {
     
     string pathLog;// input Log
-    string pathBin;
-
+    string pathBin;// input Binary-file
+    vector<string> pathsBins;// save all Binary-File
+    int curr_bin;
+    
+    string fulladdr;// address from addr2line
+    string symbol;// name from addr2line
 
     string firstline;
     // sort out relevant info
@@ -83,24 +87,40 @@ int main() {
 
     fstream New; //New file
 
-    //map<string, int> //
-    Thread thread_curr;
-    Call call;
+    
 
-    cout << "Input path to Log: " ; // same folder "try2-short.txt", different folder "./input/try2-short.txt"
+    /*
+    map<string, int> thread_map
+    int = value from D=...
+    */
+    Thread thread_curr;
+    thread_curr.stack.reserve(100);
+
+    std::cout << "Input path to Log: " ; // same folder "try2-short.txt", different folder "./input/try2-short.txt"
     getline(cin, pathLog);
     //cout << "Input path to Log: ";
     //getline(cin, pathBin);
     ifstream Log (pathLog);
     getline(Log, firstline); //skip first line of Log
 
+    std::cout << "Input path(s) to Binary: ";
+    while (getline(cin, pathBin) && !pathBin.empty()){
+        pathsBins.push_back(pathBin);
+        std::cout << "Continue: ";
+    }
+    std::cout << "Got it! \n";
+
+    if (pathsBins.empty()){
+        std::cout << "Binary is needed, will abort!";
+        abort();
+    }
     
 
 
-    New.open("OutputStack.txt", fstream::out);
-
-    while (getline(Log, tick, ':') && stoul(tick) <= 3816500){ // get tick, till first :
-        
+    New.open("OutputStack.folded", fstream::out);
+    //New << "please print";
+    while (getline(Log, tick, ':')){ // get tick, till first : //limiter: && stoul(tick) <= 4776000 4764000 3816500
+        //cout << tick << "\n";
         unsigned long long longTick = stoul(tick);
 
         getline(Log, place, ':'); // get place
@@ -116,19 +136,27 @@ int main() {
         //getline(Log, address, ':'); // address
         getline(Log, rest);
 
-        //create cmd addr2line
+        //create cmd addr2line + execute cmd
+        for (int i=0; i <= pathsBins.size() - 1; i++){
         ostringstream tofill;
-        tofill << "addr2line -C -s -f -a -i  -b elf64-big -e fw_payload23092026.elf " << regist << "| tee address.txt";
+        tofill << "addr2line -a -f -C -i -s -e " << pathsBins[i] << " " << regist << " | tee address.txt";
         string cmd = tofill.str();
         system(cmd.c_str());
         
         //get info out of address.txt
         ifstream addr2line ("address.txt");
-        string fulladdr;
-        string symbol;
         getline(addr2line, fulladdr);
         getline(addr2line, symbol); //2nd line has symbol,
         system("rm address.txt");//remove address.txt
+
+        //check here if name is resolved
+        if (symbol == "??"){} // symbol not found, search continues 
+        else { // symbol found, remember Binary and go to next step
+            curr_bin = i;
+            break;
+        }
+        
+        }
         //string to size_t
         //stringstream addrstream(fulladdr);
         //size_t addr;
@@ -142,7 +170,7 @@ int main() {
 
         //stack call on thread
         if (thread_curr.stack.size() == 0){ //beginn stack
-            call = (Call){symbol, addr, longTick, longTick, 0};
+            Call call = (Call){symbol, addr, longTick, longTick, 0};
             thread_curr.stack.push_back(call);
             thread_curr.switched = 0;
             thread_curr.last_addr = addr;
@@ -151,7 +179,7 @@ int main() {
         {// detect: new func is at beginning?
             ostringstream tocheck;
             //size_t addrcheck=
-            tocheck << "addr2line -C -s -f -a -i  -b elf64-big -e fw_payload23092026.elf " << hex << std::stoul(fulladdr, nullptr, 16) - 1 << "| tee address-1.txt";
+            tocheck << "addr2line -C -s -f -a -i  -b elf64-big -e " << pathsBins[curr_bin] << " " << hex << std::stoul(fulladdr, nullptr, 16) - 1 << "| tee address-1.txt";
             string cmdcheck = tocheck.str();
             system(cmdcheck.c_str());
             //New << cmdcheck << "\n";
@@ -164,42 +192,58 @@ int main() {
             getline(addr2linecheck, symbolcheck);
             system("rm address-1.txt");
 
-            if (symbol != symbolcheck){// it's a beginning, a beginning means a jump to new func
-                //New << "jump" << "|" << symbol << "|" << symbolcheck << "\n";
+            if (symbol != symbolcheck){// it's a beginning, a beginning means a jump to new func                    
+                std::cout << tick << " 1 \n" ;
+                std::cout << "curr_symbol: " << symbol << "\n";
+                std::cout << "curr_symbolcheck: " << symbolcheck << "\n";
+                std::cout << "curr_func: " << thread_curr.stack.back().func << "\n"; //debug
                 if (symbolcheck == thread_curr.stack.back().func){ //old func (at fulladdr - 1) continues into new func (at fulladdr = addr)
-                    New << "continue" << "\n";
-                    if (thread_curr.stack.size() == 0){
-                    } else {
-                    New << tick << "|" << thread_curr.stack[0].func;
-                    for (int i = 1; i < thread_curr.stack.size(); i++) {
-                        New << ";";
-                        New << thread_curr.stack[i].func;
-                    }
-                    New << "|" << thread_curr.stack.back().time << "|" << thread_curr.stack.back().child_duration;
-                    New << "|" << longTick - (thread_curr.stack.back().time + thread_curr.stack.back().child_duration);
-                    New << "\n";
-                    }
+                    //New << "continue" << "\n"; //debug                        
+                        std::cout << tick << " 11 \n"; //debug
+                    if (thread_curr.stack.size() == 0){                        
+                        std::cout << tick << " 111 \n"; //debug
+                    } else { 
+                        std::cout << tick << " 112 \n"; //debug
+                        New << thread_curr.stack[0].func;
+                        for (int i = 1; i < thread_curr.stack.size(); i++) {
+                            New << ";";
+                            New << thread_curr.stack[i].func;
+                        }
+                        //New << "|" << thread_curr.stack.back().time << "|" << thread_curr.stack.back().child_duration; //debug
+                        New << " " << longTick - (thread_curr.stack.back().time + thread_curr.stack.back().child_duration);
+                        New << "\n";
+                        }
                     thread_curr.popstack(longTick);
                 } else { //it was a big jump
-                    New << "jump" << "\n";
+                    std::cout << "jump" << "\n"; //debug
                 }
-                    call = (Call){symbol, addr, longTick, longTick, 0};
+                    Call call = (Call){symbol, addr, longTick, longTick, 0};
+                    std::cout << "created call\n";
+                    std::cout << call.func << " " << call.addr << " " << call.time << " " << call.org_time << " " << call.child_duration << "\n";
+                    std::cout << thread_curr.stack.size() << " " << thread_curr.stack.capacity() << " " << thread_curr.stack.max_size()<< "\n";
                     thread_curr.stack.push_back(call);
+                    std::cout << "added call\n";
                     thread_curr.switched = 0;
+                    std::cout << "changed switch\n";
                     thread_curr.last_addr = addr;
+                    std::cout << "update func\n";
                     thread_curr.last_func = addr; 
+                    std::cout << "update last_func\n";
                 
             } else { //current func returns to former func
-                New << "return" << "\n";
+                //New << "return" << "\n"; //debug
+                std::cout << tick << " 2 \n"; //debug
                 if (thread_curr.stack.size() == 0){
+                    std::cout << tick << " 21 \n"; //debug
                 } else {
-                    New << tick << "|" << thread_curr.stack[0].func;
+                    std::cout << tick << " 22 \n"; //debug
+                    New << thread_curr.stack[0].func;
                     for (int i = 1; i < thread_curr.stack.size(); i++) {
                         New << ";";
                         New << thread_curr.stack[i].func;
                     }
-                    New << "|" << thread_curr.stack.back().time << "|" << thread_curr.stack.back().child_duration;
-                    New << "|" << longTick - (thread_curr.stack.back().time + thread_curr.stack.back().child_duration);
+                    //New << "|" << thread_curr.stack.back().time << "|" << thread_curr.stack.back().child_duration; //debug
+                    New << " " << longTick - (thread_curr.stack.back().time + thread_curr.stack.back().child_duration);
                     New << "\n";
                 }
                 thread_curr.popstack(longTick);
@@ -228,8 +272,18 @@ int main() {
         */
 
     }
+    unsigned long long longTick = std::stoul(tick);
+    New << thread_curr.stack[0].func;
+    for (int i = 1; i < thread_curr.stack.size(); i++) {
+        New << ";";
+        New << thread_curr.stack[i].func;
+    }
+    //New << "|" << thread_curr.stack.back().time << "|" << thread_curr.stack.back().child_duration; //debug
+    New << " " << longTick - (thread_curr.stack.back().time + thread_curr.stack.back().child_duration);
+    New << "\n";
+
     Log.close();
     New.close();
-    
+    std::cout << "\n finished task \n";
     return 0;
 }
