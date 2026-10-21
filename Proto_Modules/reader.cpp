@@ -42,14 +42,16 @@ while(){
         getline(File, D=)
     }
 */
-    ifstream File ("try2-short.txt");
-
+    ifstream File ("./Proto_Modules/reader_addr2line.txt");
+    string tick;
     string s;
-
+    string t;
+    getline(File, tick);
     while (getline(File, s)){
-        std::cout << s << std::endl;
+        getline(File, t);
     }
 
+    std::cout << s << std::endl;
         
     File.close();
 

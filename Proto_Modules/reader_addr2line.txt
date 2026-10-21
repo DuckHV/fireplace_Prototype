@@ -1,0 +1,9 @@
+0xfffffff0000394a8
+cas_arch(unsigned long*, unsigned long, unsigned long)
+atomic-riscv.cpp:193
+bool cas<unsigned long>(unsigned long*, unsigned long, unsigned long)
+atomic.cpp:153
+Irq_base::__mask()
+irq_chip.cpp:279
+Irq_base::mask()
+irq_chip.cpp:237
