@@ -93,6 +93,7 @@ int main() {
     //     tick    place  thread   register       gem5name               instruction            operation          data             address
 
     string tick;
+    unsigned long long longTick = 0;
     string place;
     string thread;
     string regist;
@@ -147,8 +148,8 @@ int main() {
     New.open("OutputStack.folded", fstream::out);
     //New << "please print";
     while (getline(Log, tick, ':')){ // get tick, till first : //limiter: && stoul(tick) <= 4776000 4764000 3816500
-        //cout << tick << "\n";
-        unsigned long long longTick = stoul(tick);
+        cout << "Tick: " << stoul(tick) << "\n";
+        longTick = stoul(tick);
 
         getline(Log, place, ':'); // get place
         getline(Log, thread, ':'); // get thread
@@ -193,7 +194,9 @@ int main() {
         //stringstream addrstream(fulladdr);
         //size_t addr;
         //addrstream >> addr; // returns 0
+        cout << "Fulladdr: "<< fulladdr << "\n";
         size_t addr = std::stoul(fulladdr, nullptr, 16);
+        cout << "addr: " << addr << "\n";
         //stringstream addrstream;
         //size_t addr;
         //addrstream << std::hex << fulladdr;
@@ -205,12 +208,15 @@ int main() {
         //New << check << std::endl;
         if (curr_TID == 0 && ((instruction.find("c_addi sp,") != string::npos) || (instruction.find("c_addi16sp sp,") != string::npos))){
             //New << instruction.find("c_addi sp,") << " | " << instruction.find("c_addi16sp sp,") << std::endl;
-            Thread thread_buffer = thread_map.at(curr_TID);
+            Thread thread_buffer;
+            thread_buffer.stack.reserve(100);
+            thread_buffer = thread_map.at(curr_TID);
             thread_map.erase(curr_TID);
             curr_TID = std::stoul(rest.substr(rest.find("D=") + 2, 18), nullptr, 16); //find in rest, after D= //is that good thread_id?
             thread_map.insert({curr_TID, thread_buffer});
             thread_map.at(curr_TID).stack.reserve(100);
-            thread_curr = thread_map.at(curr_TID);                        
+            thread_curr = thread_map.at(curr_TID);
+            thread_curr.stack.reserve(100);                       
             //print_Stack(New, thread_curr, longTick);
                         
             //New << curr_TID << " | " << std::stoul(rest.substr(rest.find("D=") + 2, 16), nullptr, 16) << " | " << rest.substr(rest.find("D=") + 2, 18) << std::endl;
@@ -259,7 +265,8 @@ int main() {
         {// detect: new func is at beginning?
             ostringstream tocheck;
             //size_t addrcheck=
-            tocheck << "addr2line -C -s -f -a -i -e " << pathsBins[curr_bin] << " " << hex << std::stoul(fulladdr, nullptr, 16) - 1 << "| tee address-1.txt";
+            cout << "Fulladdress-1: " << hex << std::stoul(fulladdr, nullptr, 16) - 1 << dec << "\n";
+            tocheck << "addr2line -C -s -f -a -i -e " << pathsBins[curr_bin] << " " << hex << std::stoul(fulladdr, nullptr, 16) - 1 << dec << "| tee address-1.txt";
             string cmdcheck = tocheck.str();
             system(cmdcheck.c_str());
             //New << cmdcheck << "\n";
@@ -299,11 +306,11 @@ int main() {
                     //std::cout << "jump" << "\n"; //debug
                 }
                 Call call = (Call){symbol, addr, longTick, longTick, 0};
-                std::cout << "created call\n"; //debug
+                //std::cout << "created call\n"; //debug
                 //std::cout << call.func << " " << call.addr << " " << call.time << " " << call.org_time << " " << call.child_duration << "\n"; //debug
-                std::cout << thread_curr.stack.size() << " " << thread_curr.stack.capacity() << " " << thread_curr.stack.max_size()<< "\n";//debug
+                //std::cout << thread_curr.stack.size() << " " << thread_curr.stack.capacity() << " " << thread_curr.stack.max_size()<< "\n";//debug
                 thread_curr.stack.push_back(call);
-                std::cout << "pushed call\n";//debug
+                //std::cout << "pushed call\n";//debug
                 thread_curr.last_addr = addr;
                 //std::cout << "update func\n";//debug
                 thread_curr.last_func = addr; 
@@ -344,7 +351,8 @@ int main() {
         thread_curr = thread_map.at(curr_TID);
         */
     }
-    unsigned long long longTick = std::stoul(tick);
+
+    //unsigned long long longTick = std::stoul(tick);
     for (auto ID : thread_map){
         thread_curr = ID.second;
         if (ID.first != curr_TID){
