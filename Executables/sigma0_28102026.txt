@@ -1,0 +1,192 @@
+0000000080500190 t $xrv64i2p1_m2p0_a2p1_f2p2_d2p2_c2p0_zicsr2p0_zifencei2p0_zmmul1p0
+0000000080504350 t $xrv64i2p1_m2p0_a2p1_f2p2_d2p2_c2p0_zicsr2p0_zifencei2p0_zmmul1p0
+0000000080500194 t $xrv64i2p1_m2p0_a2p1_f2p2_d2p2_c2p0_zicsr2p0_zifencei2p0_zmmul1p0
+0000000080504354 t $xrv64i2p1_m2p0_a2p1_f2p2_d2p2_c2p0_zicsr2p0_zifencei2p0_zmmul1p0
+0000000080500450 t $xrv64i2p1_m2p0_a2p1_f2p2_d2p2_c2p0_zicsr2p0_zifencei2p0_zmmul1p0
+00000000805004e6 t $xrv64i2p1_m2p0_a2p1_f2p2_d2p2_c2p0_zicsr2p0_zifencei2p0_zmmul1p0
+000000008050019a t $xrv64i2p1_m2p0_a2p1_f2p2_d2p2_c2p0_zicsr2p0_zifencei2p0_zmmul1p0
+0000000080500536 t $xrv64i2p1_m2p0_a2p1_f2p2_d2p2_c2p0_zicsr2p0_zifencei2p0_zmmul1p0
+00000000805005e8 t $xrv64i2p1_m2p0_a2p1_f2p2_d2p2_c2p0_zicsr2p0_zifencei2p0_zmmul1p0
+000000008050081c t $xrv64i2p1_m2p0_a2p1_f2p2_d2p2_c2p0_zicsr2p0_zifencei2p0_zmmul1p0
+000000008050095e t $xrv64i2p1_m2p0_a2p1_f2p2_d2p2_c2p0_zicsr2p0_zifencei2p0_zmmul1p0
+0000000080500af6 t $xrv64i2p1_m2p0_a2p1_f2p2_d2p2_c2p0_zicsr2p0_zifencei2p0_zmmul1p0
+0000000080500bb8 t $xrv64i2p1_m2p0_a2p1_f2p2_d2p2_c2p0_zicsr2p0_zifencei2p0_zmmul1p0
+0000000080500dba t $xrv64i2p1_m2p0_a2p1_f2p2_d2p2_c2p0_zicsr2p0_zifencei2p0_zmmul1p0
+00000000805010b4 t $xrv64i2p1_m2p0_a2p1_f2p2_d2p2_c2p0_zicsr2p0_zifencei2p0_zmmul1p0
+0000000080501464 t $xrv64i2p1_m2p0_a2p1_f2p2_d2p2_c2p0_zicsr2p0_zifencei2p0_zmmul1p0
+00000000805001a8 t $xrv64i2p1_m2p0_a2p1_f2p2_d2p2_c2p0_zicsr2p0_zifencei2p0_zmmul1p0
+00000000805014ea t $xrv64i2p1_m2p0_a2p1_f2p2_d2p2_c2p0_zicsr2p0_zifencei2p0_zmmul1p0
+00000000805015a4 t $xrv64i2p1_m2p0_a2p1_f2p2_d2p2_c2p0_zicsr2p0_zifencei2p0_zmmul1p0
+0000000080501cca t $xrv64i2p1_m2p0_a2p1_f2p2_d2p2_c2p0_zicsr2p0_zifencei2p0_zmmul1p0
+0000000080501e5e t $xrv64i2p1_m2p0_a2p1_f2p2_d2p2_c2p0_zicsr2p0_zifencei2p0_zmmul1p0
+000000008050205e t $xrv64i2p1_m2p0_a2p1_f2p2_d2p2_c2p0_zicsr2p0_zifencei2p0_zmmul1p0
+00000000805001b6 t $xrv64i2p1_m2p0_a2p1_f2p2_d2p2_c2p0_zicsr2p0_zifencei2p0_zmmul1p0
+000000008050219e t $xrv64i2p1_m2p0_a2p1_f2p2_d2p2_c2p0_zicsr2p0_zifencei2p0_zmmul1p0
+0000000080500248 t $xrv64i2p1_m2p0_a2p1_f2p2_d2p2_c2p0_zicsr2p0_zifencei2p0_zmmul1p0
+000000008050025c t $xrv64i2p1_m2p0_a2p1_f2p2_d2p2_c2p0_zicsr2p0_zifencei2p0_zmmul1p0
+000000008050221e t $xrv64i2p1_m2p0_a2p1_f2p2_d2p2_c2p0_zicsr2p0_zifencei2p0_zmmul1p0
+0000000080502272 t $xrv64i2p1_m2p0_a2p1_f2p2_d2p2_c2p0_zicsr2p0_zifencei2p0_zmmul1p0
+0000000080502412 t $xrv64i2p1_m2p0_a2p1_f2p2_d2p2_c2p0_zicsr2p0_zifencei2p0_zmmul1p0
+00000000805024c6 t $xrv64i2p1_m2p0_a2p1_f2p2_d2p2_c2p0_zicsr2p0_zifencei2p0_zmmul1p0
+00000000805026a2 t $xrv64i2p1_m2p0_a2p1_f2p2_d2p2_c2p0_zicsr2p0_zifencei2p0_zmmul1p0
+00000000805028a4 t $xrv64i2p1_m2p0_a2p1_f2p2_d2p2_c2p0_zicsr2p0_zifencei2p0_zmmul1p0
+0000000080502a42 t $xrv64i2p1_m2p0_a2p1_f2p2_d2p2_c2p0_zicsr2p0_zifencei2p0_zmmul1p0
+0000000080502d42 t $xrv64i2p1_m2p0_a2p1_f2p2_d2p2_c2p0_zicsr2p0_zifencei2p0_zmmul1p0
+0000000080502e72 t $xrv64i2p1_m2p0_a2p1_f2p2_d2p2_c2p0_zicsr2p0_zifencei2p0_zmmul1p0
+0000000080502fee t $xrv64i2p1_m2p0_a2p1_f2p2_d2p2_c2p0_zicsr2p0_zifencei2p0_zmmul1p0
+0000000080503046 t $xrv64i2p1_m2p0_a2p1_f2p2_d2p2_c2p0_zicsr2p0_zifencei2p0_zmmul1p0
+00000000805030c6 t $xrv64i2p1_m2p0_a2p1_f2p2_d2p2_c2p0_zicsr2p0_zifencei2p0_zmmul1p0
+0000000080503360 t $xrv64i2p1_m2p0_a2p1_f2p2_d2p2_c2p0_zicsr2p0_zifencei2p0_zmmul1p0
+0000000080503468 t $xrv64i2p1_m2p0_a2p1_f2p2_d2p2_c2p0_zicsr2p0_zifencei2p0_zmmul1p0
+000000008050026a t $xrv64i2p1_m2p0_a2p1_f2p2_d2p2_c2p0_zicsr2p0_zifencei2p0_zmmul1p0
+00000000805002fc t $xrv64i2p1_m2p0_a2p1_f2p2_d2p2_c2p0_zicsr2p0_zifencei2p0_zmmul1p0
+0000000080503812 t $xrv64i2p1_m2p0_a2p1_f2p2_d2p2_c2p0_zicsr2p0_zifencei2p0_zmmul1p0
+000000008050030a t $xrv64i2p1_m2p0_a2p1_f2p2_d2p2_c2p0_zicsr2p0_zifencei2p0_zmmul1p0
+0000000080503bc4 t $xrv64i2p1_m2p0_a2p1_f2p2_d2p2_c2p0_zicsr2p0_zifencei2p0_zmmul1p0
+0000000080503bd0 t $xrv64i2p1_m2p0_a2p1_f2p2_d2p2_c2p0_zicsr2p0_zifencei2p0_zmmul1p0
+0000000080503be2 t $xrv64i2p1_m2p0_a2p1_f2p2_d2p2_c2p0_zicsr2p0_zifencei2p0_zmmul1p0
+0000000080500318 t $xrv64i2p1_m2p0_a2p1_f2p2_d2p2_c2p0_zicsr2p0_zifencei2p0_zmmul1p0
+000000008050411a t $xrv64i2p1_m2p0_a2p1_f2p2_d2p2_c2p0_zicsr2p0_zifencei2p0_zmmul1p0
+0000000080504226 t $xrv64i2p1_m2p0_a2p1_f2p2_d2p2_c2p0_zicsr2p0_zifencei2p0_zmmul1p0
+0000000080504260 t $xrv64i2p1_m2p0_a2p1_f2p2_d2p2_c2p0_zicsr2p0_zifencei2p0_zmmul1p0
+00000000805042ec t $xrv64i2p1_m2p0_a2p1_f2p2_d2p2_c2p0_zicsr2p0_zifencei2p0_zmmul1p0
+0000000080500326 t $xrv64i2p1_m2p0_a2p1_f2p2_d2p2_c2p0_zicsr2p0_zifencei2p0_zmmul1p0
+0000000080500346 t $xrv64i2p1_m2p0_a2p1_f2p2_d2p2_c2p0_zicsr2p0_zifencei2p0_zmmul1p0
+0000000080500376 t $xrv64i2p1_m2p0_a2p1_f2p2_d2p2_c2p0_zicsr2p0_zifencei2p0_zmmul1p0
+00000000805003b0 t $xrv64i2p1_m2p0_a2p1_f2p2_d2p2_c2p0_zicsr2p0_zifencei2p0_zmmul1p0
+00000000805003f0 t $xrv64i2p1_m2p0_a2p1_f2p2_d2p2_c2p0_zicsr2p0_zifencei2p0_zmmul1p0
+000000008050041e t $xrv64i2p1_m2p0_a2p1_f2p2_d2p2_c2p0_zicsr2p0_zifencei2p0_zmmul1p0
+000000008050043a t $xrv64i2p1_m2p0_a2p1_f2p2_d2p2_c2p0_zicsr2p0_zifencei2p0_zmmul1p0
+00000000805036a0 t $xrv64i2p1_m2p0_a2p1_f2p2_d2p2_c2p0_zicsr2p0_zifencei2p0_zmmul1p0
+00000000805036ac t $xrv64i2p1_m2p0_a2p1_f2p2_d2p2_c2p0_zicsr2p0_zifencei2p0_zmmul1p0
+00000000805036bc t $xrv64i2p1_m2p0_a2p1_f2p2_d2p2_c2p0_zicsr2p0_zifencei2p0_zmmul1p0
+00000000805037a2 t $xrv64i2p1_m2p0_a2p1_f2p2_d2p2_c2p0_zicsr2p0_zifencei2p0_zmmul1p0
+0000000080503bee t $xrv64i2p1_m2p0_a2p1_f2p2_d2p2_c2p0_zicsr2p0_zifencei2p0_zmmul1p0
+0000000080503e5e t $xrv64i2p1_m2p0_a2p1_f2p2_d2p2_c2p0_zicsr2p0_zifencei2p0_zmmul1p0
+0000000080503f10 t $xrv64i2p1_m2p0_a2p1_f2p2_d2p2_c2p0_zicsr2p0_zifencei2p0_zmmul1p0
+0000000080503fdc t $xrv64i2p1_m2p0_a2p1_f2p2_d2p2_c2p0_zicsr2p0_zifencei2p0_zmmul1p0
+000000008050401e t $xrv64i2p1_m2p0_a2p1_f2p2_d2p2_c2p0_zicsr2p0_zifencei2p0_zmmul1p0
+000000008050408e t $xrv64i2p1_m2p0_a2p1_f2p2_d2p2_c2p0_zicsr2p0_zifencei2p0_zmmul1p0
+0000000080507020 d _GLOBAL_OFFSET_TABLE_
+0000000080500248 0000000000000014 t _GLOBAL__sub_I__ZN15Page_alloc_base6_allocE
+0000000080500326 0000000000000020 t _GLOBAL__sub_I__ZN2L43hexE
+000000008050026a 0000000000000092 t _GLOBAL__sub_I__ZN7Mem_man4_ramE
+00000000805001b6 0000000000000092 t _GLOBAL__sub_I_l4_info
+0000000080503812 00000000000003b2 T init_memory(l4_kernel_info_t*)
+0000000080503be2 000000000000000c T dump_io_ports()
+0000000080503bc4 000000000000000c T init_io_ports()
+0000000080501464 0000000000000086 W l4_assert_abort(char const*)
+0000000080503bd0 0000000000000012 T handle_io_page_fault(unsigned long, l4_utcb_t*, Answer*)
+0000000080500450 0000000000000096 t l4_debugger_set_object_name(unsigned long, char const*) [clone .isra.0]
+0000000080509040 0000000000000008 u guard variable for cxx::Base_slab_static<48, 4096, 2, Page_alloc>::_a
+000000008050a000 0000000000001000 b page_alloc_scratch_mem
+000000008050081c 0000000000000142 t map_mem(l4_fpage_t, Memory_type, unsigned long, Answer*)
+000000008050219e 0000000000000080 T Page_alloc_base::init()
+000000008050b008 0000000000000008 B Page_alloc_base::_alloc
+000000008050b000 0000000000000008 B Page_alloc_base::_total
+00000000805036bc 00000000000000e6 T L4::LogIOBackend::write(char const*, unsigned int)
+00000000805036ac 0000000000000010 W L4::LogIOBackend::~LogIOBackend()
+00000000805036a0 000000000000000c W L4::LogIOBackend::~LogIOBackend()
+00000000805036a0 000000000000000c W L4::LogIOBackend::~LogIOBackend()
+00000000805037a2 0000000000000070 T L4::iostream_init()
+0000000080500536 00000000000000b2 W L4::Ipc::Msg::Rpc_inline_call<L4::Scheduler::run_thread_t, L4::Scheduler, l4_msgtag_t (L4::Ipc::Cap<L4::Thread>, l4_sched_param_t const&), L4::Ipc::Call>::call(L4::Cap<L4::Scheduler>, L4::Ipc::Cap<L4::Thread>, l4_sched_param_t const&, l4_utcb_t*)
+00000000805010b4 00000000000003b0 t bool L4::Ipc::Detail::Meta_svr<(anonymous namespace)::Sigma0>::_iter_interfaces<L4::Ipc::Detail::Meta_svr<(anonymous namespace)::Sigma0>::op_interface(L4::Typeid::Rights<L4::Meta>, unsigned long, long&, L4::Ipc::String<char, unsigned long>&)::{lambda(L4::Type_info const*)#1}>(L4::Type_info const*, L4::Ipc::Detail::Meta_svr<(anonymous namespace)::Sigma0>::op_interface(L4::Typeid::Rights<L4::Meta>, unsigned long, long&, L4::Ipc::String<char, unsigned long>&)::{lambda(L4::Type_info const*)#1}&)
+0000000080500dba 00000000000002fa t bool L4::Ipc::Detail::Meta_svr<(anonymous namespace)::Sigma0>::_iter_interfaces<L4::Ipc::Detail::Meta_svr<(anonymous namespace)::Sigma0>::op_num_interfaces(L4::Typeid::Rights<L4::Meta>)::{lambda(L4::Type_info const*)#1}>(L4::Type_info const*, L4::Ipc::Detail::Meta_svr<(anonymous namespace)::Sigma0>::op_num_interfaces(L4::Typeid::Rights<L4::Meta>)::{lambda(L4::Type_info const*)#1}&)
+000000008050b460 0000000000000004 B L4::dec
+000000008050b468 0000000000000004 B L4::hex
+000000008050b038 0000000000000008 B L4::cerr
+000000008050b040 0000000000000008 B L4::cout
+0000000080504908 0000000000000018 R L4::Kobject::__Kobject_typeid::_m
+0000000080504226 000000000000003a T L4::IOBackend::write(L4::IOModifier)
+0000000080504260 000000000000008c T L4::IOBackend::write(long long, int)
+00000000805042ec 0000000000000064 T L4::IOBackend::write(unsigned long long, int)
+0000000080506ff8 0000000000000008 u L4::Kobject_t<L4::Factory, L4::Kobject, (short)-15, L4::Type_info::Demand_t<(unsigned char)0, (unsigned char)0, (unsigned char)0, (unsigned char)0> >::__Kobject_typeid::_b
+0000000080506fb8 0000000000000018 u L4::Kobject_t<L4::Factory, L4::Kobject, (short)-15, L4::Type_info::Demand_t<(unsigned char)0, (unsigned char)0, (unsigned char)0, (unsigned char)0> >::__Kobject_typeid::_m
+000000008050019a 000000000000000e t L4::__iostream_init()
+00000000805001a8 000000000000000e t L4::__iostream_init()
+000000008050025c 000000000000000e t L4::__iostream_init()
+00000000805002fc 000000000000000e t L4::__iostream_init()
+000000008050030a 000000000000000e t L4::__iostream_init()
+0000000080500318 000000000000000e t L4::__iostream_init()
+000000008050b028 0000000000000010 b L4::_iob
+00000000805048f0 0000000000000011 r L4::hex_chars
+0000000080509048 0000000000000028 u cxx::Base_slab_static<48, 4096, 2, Page_alloc>::_a
+0000000080501e5e 0000000000000200 t void cxx::Bits::Bst<cxx::Bits::Base_avl_set<Region, cxx::Lt_functor<Region>, Slab_alloc, cxx::Bits::Avl_set_get_key<Region> >::_Node, cxx::Bits::Avl_set_get_key<Region>, cxx::Lt_functor<Region> >::remove_tree<cxx::Bits::Base_avl_set<Region, cxx::Lt_functor<Region>, Slab_alloc, cxx::Bits::Avl_set_get_key<Region> >::clear()::{lambda(cxx::Bits::Base_avl_set<Region, cxx::Lt_functor<Region>, Slab_alloc, cxx::Bits::Avl_set_get_key<Region> >::_Node*)#1}&>(cxx::Bits::Bst_node*, cxx::Bits::Base_avl_set<Region, cxx::Lt_functor<Region>, Slab_alloc, cxx::Bits::Avl_set_get_key<Region> >::clear()::{lambda(cxx::Bits::Base_avl_set<Region, cxx::Lt_functor<Region>, Slab_alloc, cxx::Bits::Avl_set_get_key<Region> >::_Node*)#1}&) [clone .isra.0]
+0000000080500af6 00000000000000c2 t void cxx::Bits::Bst<cxx::Bits::Base_avl_set<Region, cxx::Lt_functor<Region>, Slab_alloc, cxx::Bits::Avl_set_get_key<Region> >::_Node, cxx::Bits::Avl_set_get_key<Region>, cxx::Lt_functor<Region> >::remove_tree<cxx::Avl_tree<cxx::Bits::Base_avl_set<Region, cxx::Lt_functor<Region>, Slab_alloc, cxx::Bits::Avl_set_get_key<Region> >::_Node, cxx::Bits::Avl_set_get_key<Region>, cxx::Lt_functor<Region> >::~Avl_tree()::{lambda(cxx::Bits::Base_avl_set<Region, cxx::Lt_functor<Region>, Slab_alloc, cxx::Bits::Avl_set_get_key<Region> >::_Node*)#1}&>(cxx::Bits::Bst_node*, cxx::Avl_tree<cxx::Bits::Base_avl_set<Region, cxx::Lt_functor<Region>, Slab_alloc, cxx::Bits::Avl_set_get_key<Region> >::_Node, cxx::Bits::Avl_set_get_key<Region>, cxx::Lt_functor<Region> >::~Avl_tree()::{lambda(cxx::Bits::Base_avl_set<Region, cxx::Lt_functor<Region>, Slab_alloc, cxx::Bits::Avl_set_get_key<Region> >::_Node*)#1}&) [clone .isra.0]
+00000000805026a2 0000000000000202 W cxx::Avl_tree<cxx::Bits::Base_avl_set<Region, cxx::Lt_functor<Region>, Slab_alloc, cxx::Bits::Avl_set_get_key<Region> >::_Node, cxx::Bits::Avl_set_get_key<Region>, cxx::Lt_functor<Region> >::insert(cxx::Bits::Base_avl_set<Region, cxx::Lt_functor<Region>, Slab_alloc, cxx::Bits::Avl_set_get_key<Region> >::_Node*)
+00000000805024c6 00000000000001dc W cxx::Avl_tree<cxx::Bits::Base_avl_set<Region, cxx::Lt_functor<Region>, Slab_alloc, cxx::Bits::Avl_set_get_key<Region> >::_Node, cxx::Bits::Avl_set_get_key<Region>, cxx::Lt_functor<Region> >::remove(Region const&)
+0000000080501cca 0000000000000194 W cxx::Base_slab<48, 4096, 2, Page_alloc>::free(void*)
+00000000805028a4 000000000000019e W cxx::Base_slab<48, 4096, 2, Page_alloc>::alloc()
+000000008050095e 0000000000000198 W cxx::Base_slab<48, 4096, 2, Page_alloc>::~Base_slab()
+000000008050095e 0000000000000198 W cxx::Base_slab<48, 4096, 2, Page_alloc>::~Base_slab()
+0000000080502e72 000000000000017c T Mem_man::alloc_from(Region const*, Region const&)
+0000000080503360 0000000000000108 T Mem_man::alloc_first(unsigned long, unsigned int)
+0000000080503046 0000000000000080 T Mem_man::alloc_get_rights(Region const&, L4_fpage_rights*)
+0000000080502a42 0000000000000300 T Mem_man::add(Region const&)
+000000008050b010 0000000000000010 B Mem_man::_ram
+0000000080502412 00000000000000b4 T Mem_man::dump()
+0000000080502fee 0000000000000058 T Mem_man::alloc(Region const&)
+0000000080503468 0000000000000238 T Mem_man::reserve(Region const&)
+0000000080502d42 0000000000000130 T Mem_man::add_free(Region const&)
+00000000805030c6 000000000000029a T Mem_man::morecore()
+000000008050205e 0000000000000140 W Mem_man::~Mem_man()
+000000008050205e 0000000000000140 W Mem_man::~Mem_man()
+0000000080500bb8 0000000000000202 t L4::Type_info::has_proto(short) const [clone .isra.0]
+000000008050221e 0000000000000054 T Mem_man::find(Region const&, bool) const
+0000000080506fd0 0000000000000028 V vtable for L4::LogIOBackend
+0000000080507008 0000000000000008 d new_client(Answer*)::_next_gate
+000000008050b020 0000000000000008 b L4::iostream_init()::_initialized
+000000008050411a 000000000000010c T operator delete(void*, unsigned long)
+0000000080502272 00000000000001a0 W L4::BasicOStream& operator<< <L4::BasicOStream>(L4::BasicOStream&, Region const&)
+00000000805004e6 0000000000000050 W operator<<(L4::BasicOStream&, char const*)
+000000008050b470 B __BSS_END__
+0000000080507000 D __DATA_BEGIN__
+0000000080504920 r __EH_FRAME_BEGIN__
+0000000080505890 r __FRAME_END__
+0000000080503fdc 0000000000000042 T __GI___cxa_atexit
+0000000080503bee 0000000000000270 T __GI_memcpy
+0000000080503e5e 00000000000000b2 T __GI_memset
+0000000080503f10 00000000000000cc T __GI_strlen
+00000000805070d8 D __SDATA_BEGIN__
+0000000080507010 D __TMC_END__
+00000000805070d8 B __bss_start
+0000000080503fdc 0000000000000042 T __cxa_atexit
+00000000805003b0 t __do_global_dtors_aux
+0000000080506fb0 d __do_global_dtors_aux_fini_array_entry
+0000000080507000 D __dso_handle
+000000008050b450 0000000000000008 B __exit_cleanup
+000000008050b448 0000000000000004 B __exit_count
+000000008050b048 0000000000000400 B __exit_function_table
+000000008050401e 0000000000000070 T __exit_handler
+0000000080506fb8 d __fini_array_end
+0000000080506fb0 d __fini_array_start
+0000000080506f58 d __frame_dummy_init_array_entry
+00000000805078d8 A __global_pointer$
+0000000080506fb0 d __init_array_end
+0000000080506f58 d __init_array_start
+000000008050408e 000000000000008c T __new_exitfn
+0000000080506f58 d __preinit_array_end
+0000000080506f58 d __preinit_array_start
+00000000805070d8 D _edata
+000000008050b470 B _end
+000000008050043a 0000000000000016 T _exit
+0000000080504350 T _fini
+0000000080500190 T _init
+000000008050041e T _start
+0000000080508000 b completed.1
+0000000080509040 B crt0_stack_high
+0000000080508040 B crt0_stack_low
+0000000080500346 t deregister_tm_clones
+00000000805014ea 00000000000000ba T dump_all
+000000008050b458 0000000000000004 B errno
+00000000805003f0 t frame_dummy
+00000000805005e8 0000000000000234 T init
+0000000080509070 0000000000000010 B iomem
+0000000080504360 0000000000000018 r kip_addr
+0000000080509080 0000000000000008 B l4_info
+0000000080503bee 0000000000000270 W memcpy
+0000000080503e5e 00000000000000b2 W memset
+0000000080508008 b object.0
+00000000805015a4 0000000000000726 T pager
+0000000080500376 t register_tm_clones
+0000000080503f10 00000000000000cc W strlen

@@ -62,6 +62,17 @@ struct Thread{
     }
 };
 
+void print_Stack(fstream& New, Thread thread_curr, unsigned long long longTick){
+    if (!thread_curr.stack.empty()){ 
+    New << thread_curr.stack[0].func;
+    for (int i = 1; i < thread_curr.stack.size(); i++) {
+        New << ";";
+        New << thread_curr.stack[i].func;
+    }
+    //New << "|" << longTick << "|" << thread_curr.stack.back().time << "|" << thread_curr.stack.back().child_duration; //debug
+    New << " " << longTick - (thread_curr.stack.back().time + thread_curr.stack.back().child_duration) << std::endl;
+    }
+}
 
 
 int main() {
@@ -198,7 +209,10 @@ int main() {
             thread_map.erase(curr_TID);
             curr_TID = std::stoul(rest.substr(rest.find("D=") + 2, 18), nullptr, 16); //find in rest, after D= //is that good thread_id?
             thread_map.insert({curr_TID, thread_buffer});
-            thread_curr = thread_map.at(curr_TID);
+            thread_map.at(curr_TID).stack.reserve(100);
+            thread_curr = thread_map.at(curr_TID);                        
+            //print_Stack(New, thread_curr, longTick);
+                        
             //New << curr_TID << " | " << std::stoul(rest.substr(rest.find("D=") + 2, 16), nullptr, 16) << " | " << rest.substr(rest.find("D=") + 2, 18) << std::endl;
         }
          
@@ -216,17 +230,21 @@ int main() {
                     break;
                 }
             }
-            if (empty){  
+            if (empty){
+                thread_map.at(curr_TID) = thread_curr; // stash old thread back into thread_map
                 Thread thread_new;
-                thread_map.insert({thread_id, thread_new});
+                thread_new.stack.reserve(100);
+                thread_map.insert({thread_id, thread_new}); // create new thread with new ID in thread_map
+                thread_map.at(thread_id).stack.reserve(100);
                 thread_curr = thread_map.at(thread_id);
                 thread_curr.stack.reserve(100);
+                curr_TID = thread_id; //change curr_TID to new ID
             }
             thread_curr.resume(longTick);
             /*for (auto search : thread_map){
-                New << search.first << " | "<< hex << search.first << std::endl;
+                New << hex << search.first << dec << std::endl;
             }*/ //debug
-            
+            //New << "New ID: " << curr_TID << std::endl;
         }
         
 
@@ -274,24 +292,18 @@ int main() {
                         //std::cout << "close jump" << "\n; //debug
                     } else {
                         //New << "continue" << "\n"; //debug 
-                        New << thread_curr.stack[0].func;
-                        for (int i = 1; i < thread_curr.stack.size(); i++) {
-                            New << ";";
-                            New << thread_curr.stack[i].func;
-                        }
-                        //New << "|" << thread_curr.stack.back().time << "|" << thread_curr.stack.back().child_duration; //debug
-                        New << " " << longTick - (thread_curr.stack.back().time + thread_curr.stack.back().child_duration) << std::endl;
+                        print_Stack(New, thread_curr, longTick);
                         thread_curr.popstack(longTick);
                         }
                 } else { //it was a big jump
                     //std::cout << "jump" << "\n"; //debug
                 }
                 Call call = (Call){symbol, addr, longTick, longTick, 0};
-                //std::cout << "created call\n"; //debug
+                std::cout << "created call\n"; //debug
                 //std::cout << call.func << " " << call.addr << " " << call.time << " " << call.org_time << " " << call.child_duration << "\n"; //debug
-                //std::cout << thread_curr.stack.size() << " " << thread_curr.stack.capacity() << " " << thread_curr.stack.max_size()<< "\n";//debug
+                std::cout << thread_curr.stack.size() << " " << thread_curr.stack.capacity() << " " << thread_curr.stack.max_size()<< "\n";//debug
                 thread_curr.stack.push_back(call);
-                //std::cout << "pushed switch\n";//debug
+                std::cout << "pushed call\n";//debug
                 thread_curr.last_addr = addr;
                 //std::cout << "update func\n";//debug
                 thread_curr.last_func = addr; 
@@ -299,16 +311,8 @@ int main() {
                 
             } else { //current func returns to former func 
                 //New << "return" << "\n"; //debug
-                if (thread_curr.stack.empty()){
-                } else {
-                    New << thread_curr.stack[0].func;
-                    for (int i = 1; i < thread_curr.stack.size(); i++) {
-                        New << ";";
-                        New << thread_curr.stack[i].func;
-                    }
-                    //New << "|" << thread_curr.stack.back().time << "|" << thread_curr.stack.back().child_duration; //debug
-                    New << " " << longTick - (thread_curr.stack.back().time + thread_curr.stack.back().child_duration) << std::endl;
-                }
+                print_Stack(New, thread_curr, longTick);
+                
                 thread_curr.popstack(longTick);
 
                 while (!thread_curr.stack.empty()) {// unwind until former func is reached
@@ -331,33 +335,23 @@ int main() {
         thread_map.at(curr_TID) = thread_curr;
         //std::cout << "looped\n";//debug
         /*
-        //print stack every cycle, when a change in stack happened
-        if (thread_curr.stack.size() == 0){
-            continue;
-        } else {
-        New << tick << "|" << thread_curr.stack[0].func;
-        for (int i = 1; i < thread_curr.stack.size(); i++) {
-            New << ";";
-            New << thread_curr.stack[i].func;
+        //print stack every cycle,
+        for (auto ID : thread_map){
+            thread_curr = ID.second;
+            print_Stack(New, thread_curr, longTick);
+            //New << hex << " | " << ID.first << dec <<  std::endl;
         }
-        New << "|" << thread_curr.stack.back().time << "|" << thread_curr.stack.back().child_duration;
-        New << "|" << longTick - (thread_curr.stack.back().time + thread_curr.stack.back().child_duration);
-        New << "\n";
-        }
+        thread_curr = thread_map.at(curr_TID);
         */
-
     }
     unsigned long long longTick = std::stoul(tick);
-    thread_curr.resume(longTick);
     for (auto ID : thread_map){
         thread_curr = ID.second;
-        New << thread_curr.stack[0].func;
-        for (int i = 1; i < thread_curr.stack.size(); i++) {
-            New << ";";
-            New << thread_curr.stack[i].func;
+        if (ID.first != curr_TID){
+            thread_curr.resume(longTick);
         }
-        //New << "|" << thread_curr.stack.back().time << "|" << thread_curr.stack.back().child_duration; //debug
-        New << " " << longTick - (thread_curr.stack.back().time + thread_curr.stack.back().child_duration) << std::endl;
+        print_Stack(New, thread_curr, longTick);
+        
     }
 
     Log.close();
