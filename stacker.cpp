@@ -110,14 +110,15 @@ int main() {
 
     
 
-    
+    unsigned long long const RESERVE = 100;
     // init first thread with id 0
     unsigned long long curr_TID = 0;
     Thread init_Thread;
-    init_Thread.stack.reserve(100);
     map<unsigned long long, Thread> thread_map; //string = value from D=..., sid, a sid per Thread
     thread_map.insert({curr_TID, init_Thread});
     Thread thread_curr = thread_map[curr_TID];
+    thread_map.at(curr_TID).stack.reserve(RESERVE);
+    thread_curr.stack.reserve(RESERVE);
 
     unsigned long long const STACK_SIZE = 0x20000;
     
@@ -166,28 +167,28 @@ int main() {
 
         //create cmd addr2line + execute cmd
         for (int i=0; i <= pathsBins.size() - 1; i++){
-        ostringstream tofill;
-        tofill << "addr2line -a -f -C -i -s -e " << pathsBins[i] << " " << regist << " | tee address.txt";
-        string cmd = tofill.str();
-        system(cmd.c_str());
-        
-        //get info out of address.txt
-        ifstream addr2line ("address.txt");
-        string symbol_buffer;
-        getline(addr2line, fulladdr);
-        while (getline(addr2line, symbol_buffer)) //use last symbol in addr2line
-        {
-            symbol = symbol_buffer;
-            getline(addr2line, file);
-        }
-        system("rm address.txt");//remove address.txt
+            ostringstream tofill;
+            tofill << "addr2line -a -f -C -i -s -e " << pathsBins[i] << " " << regist << " | tee address.txt";
+            string cmd = tofill.str();
+            system(cmd.c_str());
+            
+            //get info out of address.txt
+            ifstream addr2line ("address.txt");
+            string symbol_buffer;
+            getline(addr2line, fulladdr);
+            while (getline(addr2line, symbol_buffer)) //use last symbol in addr2line
+            {
+                symbol = symbol_buffer;
+                getline(addr2line, file);
+            }
+            system("rm address.txt");//remove address.txt
 
-        //check here if name is resolved
-        if (symbol == "??"){} // symbol not found, search continues 
-        else { // symbol found, remember Binary and go to next step
-            curr_bin = i;
-            break;
-        }
+            //check here if name is resolved
+            if (symbol == "??"){} // symbol not found, search continues 
+            else { // symbol found, remember Binary and go to next step
+                curr_bin = i;
+                break;
+            }
         
         }
         //string to size_t
@@ -209,14 +210,14 @@ int main() {
         if (curr_TID == 0 && ((instruction.find("c_addi sp,") != string::npos) || (instruction.find("c_addi16sp sp,") != string::npos))){
             //New << instruction.find("c_addi sp,") << " | " << instruction.find("c_addi16sp sp,") << std::endl;
             Thread thread_buffer;
-            thread_buffer.stack.reserve(100);
+            thread_buffer.stack.reserve(RESERVE);
             thread_buffer = thread_map.at(curr_TID);
             thread_map.erase(curr_TID);
             curr_TID = std::stoul(rest.substr(rest.find("D=") + 2, 18), nullptr, 16); //find in rest, after D= //is that good thread_id?
             thread_map.insert({curr_TID, thread_buffer});
-            thread_map.at(curr_TID).stack.reserve(100);
+            thread_map.at(curr_TID).stack.reserve(RESERVE);
             thread_curr = thread_map.at(curr_TID);
-            thread_curr.stack.reserve(100);                       
+            thread_curr.stack.reserve(RESERVE);                       
             //print_Stack(New, thread_curr, longTick);
                         
             //New << curr_TID << " | " << std::stoul(rest.substr(rest.find("D=") + 2, 16), nullptr, 16) << " | " << rest.substr(rest.find("D=") + 2, 18) << std::endl;
@@ -225,7 +226,8 @@ int main() {
 
 
         //detect switch thread
-        if ((symbol.find("return_from_user_invoke") != string::npos || symbol.find("return_from_exception") != string::npos) && instruction.find("ld sp, 16(a1)")){ // c_ldsp t0, 0(sp)?
+        if ((symbol.find("return_from_user_invoke") != string::npos || symbol.find("return_from_exception") != string::npos) && instruction.find("ld sp, 16(a1)") != string::npos){ // c_ldsp t0, 0(sp)?
+            std::cout << "Enter Switch Thread \n";
             unsigned long long thread_id = std::stoul(rest.substr(rest.find("D=") + 2, 18), nullptr, 16);//find in rest, after D=; //is that good thread_id?
             thread_curr.switched = longTick;
             bool empty = true;
@@ -239,11 +241,11 @@ int main() {
             if (empty){
                 thread_map.at(curr_TID) = thread_curr; // stash old thread back into thread_map
                 Thread thread_new;
-                thread_new.stack.reserve(100);
+                thread_new.stack.reserve(RESERVE);
                 thread_map.insert({thread_id, thread_new}); // create new thread with new ID in thread_map
-                thread_map.at(thread_id).stack.reserve(100);
+                thread_map.at(thread_id).stack.reserve(RESERVE);
                 thread_curr = thread_map.at(thread_id);
-                thread_curr.stack.reserve(100);
+                thread_curr.stack.reserve(RESERVE);
                 curr_TID = thread_id; //change curr_TID to new ID
             }
             thread_curr.resume(longTick);
