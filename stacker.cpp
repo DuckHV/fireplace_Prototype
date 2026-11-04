@@ -81,7 +81,10 @@ int main() {
     string pathBin;// input Binary-file
     vector<string> pathsBins;// save all Binary-File
     int curr_bin;
-    
+    int fiasco_bin;
+    bool context_switched = false; //when a context switch happened -> start new thread after fiasco finished
+    unsigned long long thread_id;
+
     string fulladdr;// address from addr2line
     string symbol;// name from addr2line
     string file; // file from addr2line
@@ -117,8 +120,8 @@ int main() {
     map<unsigned long long, Thread> thread_map; //string = value from D=..., sid, a sid per Thread
     thread_map.insert({curr_TID, init_Thread});
     Thread thread_curr = thread_map[curr_TID];
-    thread_map.at(curr_TID).stack.reserve(RESERVE);
     thread_curr.stack.reserve(RESERVE);
+    thread_map.at(curr_TID).stack.reserve(RESERVE);
 
     unsigned long long const STACK_SIZE = 0x20000;
     
@@ -131,6 +134,11 @@ int main() {
     //getline(cin, pathBin);
     ifstream Log (pathLog);
     getline(Log, firstline); //skip first line of Log
+
+    /*
+    std::cout << "Input path to Binary(fiasco): ";
+    getline(cin, pathbin); //pathbin[0] is fiasco
+    */
 
     std::cout << "Input path(s) to Binary: ";
     while (getline(cin, pathBin) && !pathBin.empty()){
@@ -168,7 +176,7 @@ int main() {
         //create cmd addr2line + execute cmd
         for (int i=0; i <= pathsBins.size() - 1; i++){
             ostringstream tofill;
-            tofill << "addr2line -a -f -C -i -s -e " << pathsBins[i] << " " << regist << " | tee address.txt";
+            tofill << "addr2line -a -f -C -i -s -e " << pathsBins[i] << " " << regist << " > address.txt";
             string cmd = tofill.str();
             system(cmd.c_str());
             
@@ -184,75 +192,79 @@ int main() {
             system("rm address.txt");//remove address.txt
 
             //check here if name is resolved
-            if (symbol == "??"){} // symbol not found, search continues 
+            if (symbol == "??"){
+                curr_bin = i;
+            } // symbol not found, search continues 
             else { // symbol found, remember Binary and go to next step
                 curr_bin = i;
                 break;
             }
         
         }
-        //string to size_t
-        //stringstream addrstream(fulladdr);
-        //size_t addr;
-        //addrstream >> addr; // returns 0
-        cout << "Fulladdr: "<< fulladdr << "\n";
+
+        //cout << "Fulladdr: "<< fulladdr << "\n";
         size_t addr = std::stoul(fulladdr, nullptr, 16);
-        cout << "addr: " << addr << "\n";
-        //stringstream addrstream;
-        //size_t addr;
-        //addrstream << std::hex << fulladdr;
-        //addrstream >> addr;
-        //New << fulladdr<< "|" << std::stoul(fulladdr, nullptr, 16) <<  "|" << addr <<  "|" << addr2 << "\n";
-        
+        //cout << "addr: " << addr << "\n";
+
+        //cout << "cs\n" ;
+        //context switch: switch thread on exit fiasco / start application 
+        if (context_switched && fiasco_bin != curr_bin){ //there was a context switch and leaving fiasco
+            //cout << "1: " << curr_TID << "|" << thread_id << "\n";
+            thread_curr.switched = longTick;
+            thread_map.at(curr_TID) = thread_curr; // stash old thread back into thread_map
+            thread_curr = thread_map.at(thread_id);
+            thread_curr.stack.reserve(RESERVE);
+            curr_TID = thread_id; //change curr_TID to new ID
+            thread_curr.resume(longTick);
+            context_switched = false;
+            //cout << "2: " << curr_TID << "|" << thread_id << "\n";
+        }
         //detect first sp assign 
         //bool check = curr_TID == 0 && (instruction.find("c_addi sp,") != string::npos ||instruction.find("c_addi16sp sp,") != string::npos);
         //New << check << std::endl;
         if (curr_TID == 0 && ((instruction.find("c_addi sp,") != string::npos) || (instruction.find("c_addi16sp sp,") != string::npos))){
-            //New << instruction.find("c_addi sp,") << " | " << instruction.find("c_addi16sp sp,") << std::endl;
+            //cout << instruction.find("c_addi sp,") << " | " << instruction.find("c_addi16sp sp,") << std::endl;
             Thread thread_buffer;
             thread_buffer.stack.reserve(RESERVE);
             thread_buffer = thread_map.at(curr_TID);
-            thread_map.erase(curr_TID);
+            //cout << "old TID: " << curr_TID << "\n";
+            thread_map.erase(curr_TID);// #abort: corrupted size vs. prev_size
+            //cout << "erased \n" ;
             curr_TID = std::stoul(rest.substr(rest.find("D=") + 2, 18), nullptr, 16); //find in rest, after D= //is that good thread_id?
+            //cout << "new TID: " << curr_TID << "\n"; 
             thread_map.insert({curr_TID, thread_buffer});
             thread_map.at(curr_TID).stack.reserve(RESERVE);
             thread_curr = thread_map.at(curr_TID);
-            thread_curr.stack.reserve(RESERVE);                       
-            //print_Stack(New, thread_curr, longTick);
-                        
+            thread_curr.stack.reserve(RESERVE);           
             //New << curr_TID << " | " << std::stoul(rest.substr(rest.find("D=") + 2, 16), nullptr, 16) << " | " << rest.substr(rest.find("D=") + 2, 18) << std::endl;
         }
          
 
-
-        //detect switch thread
-        if ((symbol.find("return_from_user_invoke") != string::npos || symbol.find("return_from_exception") != string::npos) && instruction.find("ld sp, 16(a1)") != string::npos){ // c_ldsp t0, 0(sp)?
-            std::cout << "Enter Switch Thread \n";
-            unsigned long long thread_id = std::stoul(rest.substr(rest.find("D=") + 2, 18), nullptr, 16);//find in rest, after D=; //is that good thread_id?
-            thread_curr.switched = longTick;
+        //cout << "ts\n";
+        //detect switch thread, can only happen in fiasco
+        if (symbol.find("_skip_save_kernel_sptp78") != string::npos  && instruction.find("c_ldsp sp, 16(sp)") != string::npos){ // c_ldsp t0, 0(sp)? ld sp, 16(a1)return_from_user_invoke|| symbol.find("return_from_exception") != string::npos)
+            thread_id = std::stoul(rest.substr(rest.find("D=") + 2, 18), nullptr, 16);//find in rest, after D=; //is that good thread_id?
+            context_switched = true;
             bool empty = true;
+            fiasco_bin = curr_bin; // function can only happen when binary is fiasco
             for (auto search : thread_map){
                 if(thread_id >= search.first && thread_id < search.first + STACK_SIZE){
-                    thread_curr = thread_map.at(search.first);
+                    //thread_curr = thread_map.at(search.first);
+                    thread_id = search.first;
                     empty =  false;
                     break;
                 }
             }
             if (empty){
-                thread_map.at(curr_TID) = thread_curr; // stash old thread back into thread_map
                 Thread thread_new;
                 thread_new.stack.reserve(RESERVE);
-                thread_map.insert({thread_id, thread_new}); // create new thread with new ID in thread_map
+                thread_map.insert({thread_id, thread_new}); // create new thread with new ID in thread_map   
                 thread_map.at(thread_id).stack.reserve(RESERVE);
-                thread_curr = thread_map.at(thread_id);
-                thread_curr.stack.reserve(RESERVE);
-                curr_TID = thread_id; //change curr_TID to new ID
             }
-            thread_curr.resume(longTick);
             /*for (auto search : thread_map){
                 New << hex << search.first << dec << std::endl;
             }*/ //debug
-            //New << "New ID: " << curr_TID << std::endl;
+            //cout << "New ID: " << thread_id << std::endl;
         }
         
 
@@ -267,8 +279,8 @@ int main() {
         {// detect: new func is at beginning?
             ostringstream tocheck;
             //size_t addrcheck=
-            cout << "Fulladdress-1: " << hex << std::stoul(fulladdr, nullptr, 16) - 1 << dec << "\n";
-            tocheck << "addr2line -C -s -f -a -i -e " << pathsBins[curr_bin] << " " << hex << std::stoul(fulladdr, nullptr, 16) - 1 << dec << "| tee address-1.txt";
+            //cout << "Fulladdress-1: " << hex << std::stoul(fulladdr, nullptr, 16) - 1 << dec << "\n";
+            tocheck << "addr2line -C -s -f -a -i -e " << pathsBins[curr_bin] << " " << hex << std::stoul(fulladdr, nullptr, 16) - 1 << dec << " > address-1.txt";
             string cmdcheck = tocheck.str();
             system(cmdcheck.c_str());
             //New << cmdcheck << "\n";
@@ -339,21 +351,12 @@ int main() {
         } else {
             //std::cout << "nothing" << std::endl;
         }
-
+        
         oldinst = instruction;
         thread_map.at(curr_TID) = thread_curr;
-        //std::cout << "looped\n";//debug
-        /*
-        //print stack every cycle,
-        for (auto ID : thread_map){
-            thread_curr = ID.second;
-            print_Stack(New, thread_curr, longTick);
-            //New << hex << " | " << ID.first << dec <<  std::endl;
-        }
-        thread_curr = thread_map.at(curr_TID);
-        */
+        
     }
-
+    //cout << "finished reading\n";
     //unsigned long long longTick = std::stoul(tick);
     for (auto ID : thread_map){
         thread_curr = ID.second;
