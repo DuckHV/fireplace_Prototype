@@ -157,7 +157,7 @@ int main() {
     New.open("OutputStack.folded", fstream::out);
     //New << "please print";
     while (getline(Log, tick, ':')){ // get tick, till first : //limiter: && stoul(tick) <= 4776000 4764000 3816500
-        cout << "Tick: " << stoul(tick) << "\n";
+        //cout << "Tick: " << stoul(tick) << "\n";
         longTick = stoul(tick);
 
         getline(Log, place, ':'); // get place
