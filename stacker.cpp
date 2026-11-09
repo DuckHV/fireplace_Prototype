@@ -125,13 +125,9 @@ int main() {
 
     unsigned long long const STACK_SIZE = 0x20000;
     
-    //Thread thread_curr;
-    //thread_curr.stack.reserve(100);
 
-    std::cout << "Input path to Log: " ; // same folder "try2-short.txt", different folder "./input/try2-short.txt"
+    std::cout << "Input path to Log: " ;
     getline(cin, pathLog);
-    //cout << "Input path to Log: ";
-    //getline(cin, pathBin);
     ifstream Log (pathLog);
     getline(Log, firstline); //skip first line of Log
 
@@ -145,12 +141,12 @@ int main() {
         pathsBins.push_back(pathBin);
         std::cout << "Continue: ";
     }
-    //std::cout << "Got it! \n";
 
     if (pathsBins.empty()){
         std::cout << "Binary is needed, will abort!";
         abort();
     }
+    std::cout << "Got it! \n";
     
 
 
@@ -167,10 +163,11 @@ int main() {
             gem5name = regist.substr(regist.find("@") + 1);
             regist.resize(regist.find("@"));
         }
+        if (regist.find(".") != string::npos){
+            string sub_regist = regist.substr(regist.find(".") + 1);
+            regist.resize(regist.find("."));
+        }
         getline(Log, instruction, ':'); // instruction
-        //getline(Log, operation, ':'); // operation
-        //getline(Log, data, ':'); // data
-        //getline(Log, address, ':'); // address
         getline(Log, rest);
 
         //create cmd addr2line + execute cmd
@@ -202,14 +199,10 @@ int main() {
         
         }
 
-        //cout << "Fulladdr: "<< fulladdr << "\n";
         size_t addr = std::stoul(fulladdr, nullptr, 16);
-        //cout << "addr: " << addr << "\n";
 
-        //cout << "cs\n" ;
         //context switch: switch thread on exit fiasco / start application 
         if (context_switched && fiasco_bin != curr_bin){ //there was a context switch and leaving fiasco
-            //cout << "1: " << curr_TID << "|" << thread_id << "\n";
             thread_curr.switched = longTick;
             thread_map.at(curr_TID) = thread_curr; // stash old thread back into thread_map
             thread_curr = thread_map.at(thread_id);
@@ -217,26 +210,19 @@ int main() {
             curr_TID = thread_id; //change curr_TID to new ID
             thread_curr.resume(longTick);
             context_switched = false;
-            //cout << "2: " << curr_TID << "|" << thread_id << "\n";
         }
+
         //detect first sp assign 
-        //bool check = curr_TID == 0 && (instruction.find("c_addi sp,") != string::npos ||instruction.find("c_addi16sp sp,") != string::npos);
-        //New << check << std::endl;
         if (curr_TID == 0 && ((instruction.find("c_addi sp,") != string::npos) || (instruction.find("c_addi16sp sp,") != string::npos))){
-            //cout << instruction.find("c_addi sp,") << " | " << instruction.find("c_addi16sp sp,") << std::endl;
             Thread thread_buffer;
             thread_buffer.stack.reserve(RESERVE);
             thread_buffer = thread_map.at(curr_TID);
-            //cout << "old TID: " << curr_TID << "\n";
             thread_map.erase(curr_TID);// #abort: corrupted size vs. prev_size
-            //cout << "erased \n" ;
             curr_TID = std::stoul(rest.substr(rest.find("D=") + 2, 18), nullptr, 16); //find in rest, after D= //is that good thread_id?
-            //cout << "new TID: " << curr_TID << "\n"; 
             thread_map.insert({curr_TID, thread_buffer});
             thread_map.at(curr_TID).stack.reserve(RESERVE);
             thread_curr = thread_map.at(curr_TID);
             thread_curr.stack.reserve(RESERVE);           
-            //New << curr_TID << " | " << std::stoul(rest.substr(rest.find("D=") + 2, 16), nullptr, 16) << " | " << rest.substr(rest.find("D=") + 2, 18) << std::endl;
         }
          
 
@@ -278,8 +264,6 @@ int main() {
         } else if (!(thread_curr.stack.back().func == symbol))// a different func appears
         {// detect: new func is at beginning?
             ostringstream tocheck;
-            //size_t addrcheck=
-            //cout << "Fulladdress-1: " << hex << std::stoul(fulladdr, nullptr, 16) - 1 << dec << "\n";
             tocheck << "addr2line -C -s -f -a -i -e " << pathsBins[curr_bin] << " " << hex << std::stoul(fulladdr, nullptr, 16) - 1 << dec << " > address-1.txt";
             string cmdcheck = tocheck.str();
             system(cmdcheck.c_str());
@@ -301,12 +285,7 @@ int main() {
             system("rm address-1.txt");
 
             if (symbol != symbolcheck){// it's a beginning, a beginning means a jump to new func
-                //std::cout << "curr_symbol: " << symbol << "\n"; //debug
-                //std::cout << "curr_symbolcheck: " << symbolcheck << "\n"; //debug
-                //std::cout << "curr_func: " << thread_curr.stack.back().func << "\n"; //debug
                 if (symbolcheck == thread_curr.stack.back().func){ //old func (at fulladdr - 1) continues into new func (at fulladdr = addr)       
-                    //New << oldinst << "\n"; //debug
-                    //New << oldinst.find("jal") << " | " << oldinst.find("c_jalr") << " | "<< string::npos << "\n";  //debug
                     if (thread_curr.stack.size() == 0){ 
                         //std::cout << "stack is empty \n";     
                     } else if (oldinst.find("jal") != string::npos || oldinst.find("c_jalr") != string::npos){//decide with instruction in line, if close jump (call) or continue in new func 
@@ -320,15 +299,9 @@ int main() {
                     //std::cout << "jump" << "\n"; //debug
                 }
                 Call call = (Call){symbol, addr, longTick, longTick, 0};
-                //std::cout << "created call\n"; //debug
-                //std::cout << call.func << " " << call.addr << " " << call.time << " " << call.org_time << " " << call.child_duration << "\n"; //debug
-                //std::cout << thread_curr.stack.size() << " " << thread_curr.stack.capacity() << " " << thread_curr.stack.max_size()<< "\n";//debug
                 thread_curr.stack.push_back(call);
-                //std::cout << "pushed call\n";//debug
                 thread_curr.last_addr = addr;
-                //std::cout << "update func\n";//debug
                 thread_curr.last_func = addr; 
-                //std::cout << "update last_func\n";//debug
                 
             } else { //current func returns to former func 
                 //New << "return" << "\n"; //debug
@@ -340,7 +313,6 @@ int main() {
                 if (symbol == thread_curr.stack.back().func){
                     break;
                 } else { //delete, check older function in stack
-                    //New << "unwrap" << symbol << thread_curr.stack.back().func << "\n";//debug
                     thread_curr.popstack(longTick);
                 }
                 }
@@ -357,7 +329,6 @@ int main() {
         
     }
     //cout << "finished reading\n";
-    //unsigned long long longTick = std::stoul(tick);
     for (auto ID : thread_map){
         thread_curr = ID.second;
         if (ID.first != curr_TID){
