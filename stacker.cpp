@@ -27,12 +27,13 @@ struct Thread{
     size_t last_func;
     size_t last_addr;
     //Thread() = default;
+    // delete symbol at the back and calculate time difference for new symbol at the back
     void popstack (unsigned long long time) {
         unsigned long long duration = time - stack.back().time;
         stack.pop_back();
         stack.back().child_duration += duration;
     }
-
+    //after pausing + resuming the thread, adjust the time for all symbols in stack with the pause duration 
     void resume (unsigned long long time) {
         unsigned long long duration = time - switched;
         for (int i = 0; i < stack.size(); i++) {
@@ -42,6 +43,12 @@ struct Thread{
     }
 };
 
+struct Process{
+    map<unsigned long long, Thread> thread_map;
+    unsigned long long last_TID;
+};
+
+// to print the stack of a thread
 void print_Stack(fstream& New, Thread thread_curr, unsigned long long longTick){
     if (!thread_curr.stack.empty()){
         if (thread_curr.stack[0].func == "??"){
@@ -67,7 +74,7 @@ int main() {
     string pathLog;// input Log
     string pathBin;// input Binary-file
     vector<string> pathsBins;// save all Binary-File
-    int curr_bin;
+    int curr_bin;// curr_bin = 0 is fiasco binary
     bool context_switched = false; //when a context switch happened -> start new thread after fiasco finished
     unsigned long long thread_id;
 
@@ -89,22 +96,26 @@ int main() {
     string gem5name;
     string task;
     string instruction;
-    //string operation;
-    //string data;
-    //string address;
     string rest;
     string oldinst; //instruction of former line
 
     fstream New; //New file
 
     
+    string curr_satp = "0";
+    Process process;
+    map<string, Process> process_map;
+    process_map.insert({curr_satp, process});
+    Process& curr_process = process_map.at(curr_satp);
+    
+
 
     unsigned long long const RESERVE = 100;
     unsigned long long curr_TID = 0;// init first thread with id 0
     Thread init_Thread;
-    map<unsigned long long, Thread> thread_map; //string = value from D=..., sid, a sid per Thread
-    thread_map.insert({curr_TID, init_Thread});
-    thread_map.at(curr_TID).stack.reserve(RESERVE);
+    curr_process.thread_map.insert({curr_TID, init_Thread});
+    curr_process.thread_map.at(curr_TID).stack.reserve(RESERVE);
+    curr_process.last_TID = curr_TID;
 
     unsigned long long const STACK_SIZE = 0x20000;
     
@@ -117,7 +128,7 @@ int main() {
     std::cout << "Input path(s) to Binary (fiasco): "; //pathbin[0] is fiasco
     while (getline(cin, pathBin) && !pathBin.empty()){
         pathsBins.push_back(pathBin);
-        std::cout << "Continue: ";
+        std::cout << "Other path to Binary: ";
     }
 
     if (pathsBins.empty()){
@@ -191,13 +202,18 @@ int main() {
 
         size_t addr = std::stoul(fulladdr, nullptr, 16);
 
+        /*process switch 
+        instruction.find("csrrs") && instruction.find("satp")
+        curr_process.lastTID=curr_TID
+        */
         //context switch: switch thread on exit fiasco / start application 
         if (context_switched && 0 != curr_bin){ //there was a context switch and leaving fiasco
-            //New << "cs" << std::endl;
-            thread_map.at(curr_TID).switched = longTick;
+            //New << "cs\n";
+            curr_process.thread_map.at(curr_TID).switched = longTick;
+            //New << "curr_TID: "<< hex << curr_TID << "|thread_id: " << thread_id << dec << std::endl;
             curr_TID = thread_id; //change curr_TID to new ID
-            thread_map.at(curr_TID).stack.reserve(RESERVE);
-            thread_map.at(curr_TID).resume(longTick);
+            curr_process.thread_map.at(curr_TID).stack.reserve(RESERVE);
+            curr_process.thread_map.at(curr_TID).resume(longTick);
             context_switched = false;
         }
 
@@ -205,20 +221,21 @@ int main() {
         if (curr_TID == 0 && ((instruction.find("c_addi sp,") != string::npos) || (instruction.find("c_addi16sp sp,") != string::npos))){
             Thread thread_buffer;
             thread_buffer.stack.reserve(RESERVE);
-            thread_buffer = thread_map.at(curr_TID);
-            thread_map.erase(curr_TID);// #abort: corrupted size vs. prev_size
+            thread_buffer = curr_process.thread_map.at(curr_TID);
+            curr_process.thread_map.erase(curr_TID);// #abort: corrupted size vs. prev_size
             curr_TID = std::stoul(rest.substr(rest.find("D=") + 2, 18), nullptr, 16); //find in rest, after D= //is that good thread_id?
-            thread_map.insert({curr_TID, thread_buffer});
-            Thread& thread_curr = thread_map.at(curr_TID);
-            thread_curr.stack.reserve(RESERVE);           
+            curr_process.thread_map.insert({curr_TID, thread_buffer});         
         }
          
+
+        //cout << "ts\n";
         //detect switch thread, can only happen in fiasco
         if (symbol.find("_skip_save_kernel_sptp78") != string::npos  && instruction.find("c_ldsp sp, 16(sp)") != string::npos){ // c_ldsp t0, 0(sp)? ld sp, 16(a1)return_from_user_invoke|| symbol.find("return_from_exception") != string::npos)
+            //New << "ts\n";
             thread_id = std::stoul(rest.substr(rest.find("D=") + 2, 18), nullptr, 16);//find in rest, after D=; //is that good thread_id?
             context_switched = true;
             bool empty = true;
-            for (auto search : thread_map){
+            for (auto search : curr_process.thread_map){
                 if(thread_id >= search.first && thread_id < search.first + STACK_SIZE){
                     thread_id = search.first;
                     empty =  false;
@@ -227,12 +244,11 @@ int main() {
             }
             if (empty){
                 Thread thread_new;
-                thread_map.insert({thread_id, thread_new}); // create new thread with new ID in thread_map   
-                thread_map.at(thread_id).stack.reserve(RESERVE);
+                curr_process.thread_map.insert({thread_id, thread_new}); // create new thread with new ID in thread_map   
             }
         }
         
-        Thread& thread_curr = thread_map.at(curr_TID);
+        Thread& thread_curr = curr_process.thread_map[curr_TID];
 
         //stack call on thread
         if (thread_curr.stack.size() == 0){ //beginn stack
@@ -319,14 +335,15 @@ int main() {
         
     }
     //cout << "finished reading\n";
-    for (auto ID : thread_map){
-        Thread &thread_curr = ID.second;
-        if (ID.first != curr_TID){
-            thread_curr.resume(longTick);
+    // final print of all threads at end of file
+    for (auto SATP : process_map){
+        for (auto TID : SATP.second.thread_map){
+            //New << SATP.first << ": " << hex << TID.first << dec << ":\n";
+            print_Stack(New, TID.second, longTick);
+            
         }
-        print_Stack(New, thread_curr, longTick);
-        
     }
+
 
     Log.close();
     New.close();
