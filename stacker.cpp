@@ -45,7 +45,7 @@ struct Thread{
 
 struct Process{
     map<unsigned long long, Thread> thread_map;
-    unsigned long long last_TID;
+    //unsigned long long last_TID;
 };
 
 // to print the stack of a thread
@@ -76,7 +76,7 @@ int main() {
     vector<string> pathsBins;// save all Binary-File
     int curr_bin;// curr_bin = 0 is fiasco binary
     bool context_switched = false; //when a context switch happened -> start new thread after fiasco finished
-    unsigned long long thread_id;
+
 
     string fulladdr;// address from addr2line
     string symbol;// name from addr2line
@@ -101,21 +101,25 @@ int main() {
 
     fstream New; //New file
 
-    
-    string curr_satp = "0";
+    //help variables for switching thread/process/context
+    string new_satp = "0x0000000000000000";
+    unsigned long long thread_id = 0;
+
+    //bool process_switched = false;
+    string curr_satp = new_satp;
+    //string regist_swap_a6 = "0000000000000000"; // the value of satp is stored and changed in register a6
     Process process;
     map<string, Process> process_map;
     process_map.insert({curr_satp, process});
-    Process& curr_process = process_map.at(curr_satp);
     
 
 
     unsigned long long const RESERVE = 100;
     unsigned long long curr_TID = 0;// init first thread with id 0
     Thread init_Thread;
-    curr_process.thread_map.insert({curr_TID, init_Thread});
-    curr_process.thread_map.at(curr_TID).stack.reserve(RESERVE);
-    curr_process.last_TID = curr_TID;
+    process_map.at(curr_satp).thread_map.insert({curr_TID, init_Thread});
+    process_map.at(curr_satp).thread_map.at(curr_TID).stack.reserve(RESERVE);
+    //process_map.at(curr_satp).last_TID = curr_TID;
 
     unsigned long long const STACK_SIZE = 0x20000;
     
@@ -126,6 +130,7 @@ int main() {
     getline(Log, firstline); //skip first line of Log
 
     std::cout << "Input path(s) to Binary (fiasco): "; //pathbin[0] is fiasco
+    std::cout << "Input path to Binary (fiasco): ";
     while (getline(cin, pathBin) && !pathBin.empty()){
         pathsBins.push_back(pathBin);
         std::cout << "Other path to Binary: ";
@@ -155,8 +160,8 @@ int main() {
     New.open("OutputStack.folded", fstream::out);
     while (getline(Log, tick, ':')){ // get tick, till first : //limiter: && stoul(tick) <= 4776000 4764000 3816500
         //New << "Tick: " << stoul(tick) << "\n";
+        New << "Tick: " << stoul(tick) << std::endl;
         longTick = stoul(tick);
-
         getline(Log, place, ':'); // get place
         getline(Log, thread, ':'); // get thread
         getline(Log, regist, ':'); // register, have to separate name again
@@ -202,36 +207,90 @@ int main() {
 
         size_t addr = std::stoul(fulladdr, nullptr, 16);
 
-        /*process switch 
-        instruction.find("csrrs") && instruction.find("satp")
-        curr_process.lastTID=curr_TID
-        */
-        //context switch: switch thread on exit fiasco / start application 
-        if (context_switched && 0 != curr_bin){ //there was a context switch and leaving fiasco
-            //New << "cs\n";
-            curr_process.thread_map.at(curr_TID).switched = longTick;
-            //New << "curr_TID: "<< hex << curr_TID << "|thread_id: " << thread_id << dec << std::endl;
-            curr_TID = thread_id; //change curr_TID to new ID
-            curr_process.thread_map.at(curr_TID).stack.reserve(RESERVE);
-            curr_process.thread_map.at(curr_TID).resume(longTick);
-            context_switched = false;
+        
+        //swap SATP in process_map, which was changed during application
+        if (instruction.find("c_sdsp a6, 128(sp)") != string::npos && symbol == "_save_trap_state0"){
+            New << "swapSATP" << std::endl;
+            New << "curr_satp: " << curr_satp << "| from_a6: " << rest.substr(rest.find("D=") + 2, 18) << std::endl;New << "curr_TID: "<< hex << curr_TID << "|thread_id: " << thread_id << dec << std::endl;
+            New << "curr_satp: "<< hex << curr_satp << "| new_satp: " << new_satp << dec << std::endl;
+            New << "Maps: " << std::endl;
+            for (auto SATP : process_map){
+                for (auto TID : SATP.second.thread_map){
+                    New << "SATP: " << SATP.first << "| TID: " << TID.first << std::endl;
+                }
+            }
+            if (rest.substr(rest.find("D=") + 2, 18) != curr_satp){
+                Process curr_process =  process_map.at(curr_satp);
+                string find_a6 = rest.substr(rest.find("D=") + 2, 18);
+                New << "1" << std::endl;
+                Process buffer_process = curr_process;
+                std::map<string, Process>::iterator it;
+                /*
+                Process buffer_process;
+                New << "2" << std::endl;
+                for (auto TID : buffer_process.thread_map){
+                    TID.second.stack.reserve(RESERVE);
+                }
+                
+                New << "3" << std::endl;
+                buffer_process = curr_process;
+                */
+                New << "2" << std::endl;
+                New << process_map.count(curr_satp) << std::endl;
+                it = process_map.find(curr_satp); 
+                //New << std::distance(it, process_map.begin()) << std::endl;
+                New << "3" << std::endl;//free(): invalid size
+                //for (auto TID : buffer_process.thread_map){
+                //    New << "curr_satp: "<< process_map.count(curr_satp) << "| TID: " << process_map.at(curr_satp).thread_map.count(TID.first) << std::endl;
+                //    process_map.at(curr_satp).thread_map.erase(TID.first);
+                //    New << "erased" << std::endl;
+                //}
+                process_map.insert({find_a6, buffer_process});
+                for (auto SATP : process_map){
+                for (auto TID : SATP.second.thread_map){
+                    New << "SATP: " << SATP.first << "| TID: " << TID.first << std::endl;
+                    }
+                }
+                New << "4" << std::endl;
+                process_map.erase(it);
+                New << "5" << std::endl;
+                New << "6" << std::endl;
+                curr_satp = find_a6;
+            }
         }
-
-        //detect first sp assign 
-        if (curr_TID == 0 && ((instruction.find("c_addi sp,") != string::npos) || (instruction.find("c_addi16sp sp,") != string::npos))){
-            Thread thread_buffer;
-            thread_buffer.stack.reserve(RESERVE);
-            thread_buffer = curr_process.thread_map.at(curr_TID);
-            curr_process.thread_map.erase(curr_TID);// #abort: corrupted size vs. prev_size
-            curr_TID = std::stoul(rest.substr(rest.find("D=") + 2, 18), nullptr, 16); //find in rest, after D= //is that good thread_id?
-            curr_process.thread_map.insert({curr_TID, thread_buffer});         
+        /*
+        //
+        if (instruction.find("csrrw zero, satp, a6") != string::npos && symbol == "switchin_context_label"){
+            process_switched = true;
+        }*/
+        //process switch, after actually getting new SATP from a6
+        if (instruction.find("c_ldsp a6, 128(sp)") != string::npos && symbol == "_skip_save_kernel_sptp78"){ 
+            New << "ps" << std::endl;
+            //process_map.at(curr_satp).last_TID=curr_TID;
+            context_switched = true;
+            bool empty = true;
+            new_satp  = rest.substr(rest.find("D=") + 2, 18);//find value in a6 to switch to
+            for (auto SATP : process_map){
+                if (SATP.first == new_satp) {
+                    //curr_satp = new_satp;
+                    empty = false;
+                    break;
+                }
+            }
+            if (empty){
+                Process new_process;
+                process_map.insert({new_satp,new_process});
+                process_map.at(new_satp).thread_map.insert({0, init_Thread});   
+                //curr_satp = new_satp;
+            }
         }
-         
-
-        //cout << "ts\n";
+        
+        //Process& curr_process =  process_map.at(curr_satp);        
+                
         //detect switch thread, can only happen in fiasco
         if (symbol.find("_skip_save_kernel_sptp78") != string::npos  && instruction.find("c_ldsp sp, 16(sp)") != string::npos){ // c_ldsp t0, 0(sp)? ld sp, 16(a1)return_from_user_invoke|| symbol.find("return_from_exception") != string::npos)
-            //New << "ts\n";
+            New << "ts" << std::endl;
+            Process& curr_process =  process_map.at(new_satp);// the process/SATP might have changed beforehand, so the change applies for the next process
             thread_id = std::stoul(rest.substr(rest.find("D=") + 2, 18), nullptr, 16);//find in rest, after D=; //is that good thread_id?
             context_switched = true;
             bool empty = true;
@@ -246,9 +305,44 @@ int main() {
                 Thread thread_new;
                 curr_process.thread_map.insert({thread_id, thread_new}); // create new thread with new ID in thread_map   
             }
+            //New << "New ID: " << hex << thread_id << dec << std::endl;
         }
+                
+        //context switch: switch thread on exit fiasco / start application 
+        if (context_switched && 0 != curr_bin){ //there was a context switch and leaving fiasco
+            New << "cs" << std::endl;
+            New << "curr_TID: "<< hex << curr_TID << "|thread_id: " << thread_id << dec << std::endl;
+            New << "curr_satp: "<< hex << curr_satp << "|new_satp: " << new_satp << dec << std::endl;
+            New << "Maps: " << std::endl;
+            for (auto SATP : process_map){
+                for (auto TID : SATP.second.thread_map){
+                    New << "SATP: " << SATP.first << "| TID: " << TID.first << std::endl;
+                }
+            }
+            process_map.at(curr_satp).thread_map.at(curr_TID).switched = longTick;
+            process_map.at(new_satp).thread_map.at(thread_id).stack.reserve(RESERVE);
+            process_map.at(new_satp).thread_map.at(thread_id).resume(longTick);
+            curr_satp = new_satp; //change curr_SATP to new SATP
+            curr_TID = thread_id; //change curr_TID to new TID
+            context_switched = false;
+        }
+
+        //detect first sp assign 
+        if (curr_TID == 0 && ((instruction.find("c_addi sp,") != string::npos) || (instruction.find("c_addi16sp sp,") != string::npos))){
+            New << "spassign" << std::endl;
+            Process& curr_process =  process_map.at(curr_satp);
+            Thread thread_buffer;
+            thread_buffer.stack.reserve(RESERVE);
+            thread_buffer = curr_process.thread_map.at(curr_TID);
+            curr_process.thread_map.erase(curr_TID);// #abort: corrupted size vs. prev_size
+            curr_TID = std::stoul(rest.substr(rest.find("D=") + 2, 18), nullptr, 16); //find in rest, after D= //is that good thread_id?
+            curr_process.thread_map.insert({curr_TID, thread_buffer});
+            curr_process.thread_map.at(curr_TID).stack.reserve(RESERVE);        
+        }
+
+        Thread& thread_curr = process_map.at(curr_satp).thread_map[curr_TID];
         
-        Thread& thread_curr = curr_process.thread_map[curr_TID];
+        New << "curr_satp: " << curr_satp << " | curr_TID: " << curr_TID << std::endl;
 
         //stack call on thread
         if (thread_curr.stack.size() == 0){ //beginn stack
@@ -280,6 +374,7 @@ int main() {
             system("rm address-1.txt");
 
             if (symbol != symbolcheck){// it's a beginning, a beginning means a jump to new func
+                //New << "thread_curr: capacity: " << thread_curr.stack.capacity() << "|size: " << thread_curr.stack.size() << std::endl;
                 if (symbolcheck == thread_curr.stack.back().func){ //old func (at fulladdr - 1) continues into new func (at fulladdr = addr)       
                     if (thread_curr.stack.size() == 0){ 
                         //std::cout << "stack is empty \n";     
@@ -332,15 +427,30 @@ int main() {
         }
         
         oldinst = instruction;
-        
+        New << "looped" << std::endl;
+        /*
+        New << "current TID: " << hex << curr_TID << dec << "\n";
+        cout << "current TID: " << hex << curr_TID << dec << "\n";
+        for (auto SATP : process_map){
+            for (auto TID : SATP.second.thread_map){
+                if (TID.first != curr_TID){
+                    TID.second.resume(longTick);
+                }
+                New << SATP.first << ": " << hex << TID.first << dec << ":\n";
+                print_Stack(New, TID.second, longTick);
+            }
+        }
+        */
     }
     //cout << "finished reading\n";
     // final print of all threads at end of file
     for (auto SATP : process_map){
         for (auto TID : SATP.second.thread_map){
+            if (TID.first != curr_TID && SATP.first != curr_satp){
+                    TID.second.resume(longTick);
+            }
             //New << SATP.first << ": " << hex << TID.first << dec << ":\n";
             print_Stack(New, TID.second, longTick);
-            
         }
     }
 
