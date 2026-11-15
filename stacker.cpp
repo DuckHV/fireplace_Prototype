@@ -45,7 +45,7 @@ struct Thread{
 
 struct Process{
     map<unsigned long long, Thread> thread_map;
-    //unsigned long long last_TID;
+    unsigned long long overwritten_SATP;// this is the former SATP of the process, it can change while in user-mode
 };
 
 // to print the stack of a thread
@@ -102,14 +102,14 @@ int main() {
     fstream New; //New file
 
     //help variables for switching thread/process/context
-    string new_satp = "0x0000000000000000";
+    unsigned long long new_satp = 0;
     unsigned long long thread_id = 0;
 
     //bool process_switched = false;
-    string curr_satp = new_satp;
-    //string regist_swap_a6 = "0000000000000000"; // the value of satp is stored and changed in register a6
+    unsigned long long curr_satp = new_satp;
     Process process;
-    map<string, Process> process_map;
+    process.overwritten_SATP = 0;
+    map<unsigned long long, Process> process_map; // contains <SATP, Process>
     process_map.insert({curr_satp, process});
     
 
@@ -211,20 +211,22 @@ int main() {
         //swap SATP in process_map, which was changed during application
         if (instruction.find("c_sdsp a6, 128(sp)") != string::npos && symbol == "_save_trap_state0"){
             New << "swapSATP" << std::endl;
-            New << "curr_satp: " << curr_satp << "| from_a6: " << rest.substr(rest.find("D=") + 2, 18) << std::endl;New << "curr_TID: "<< hex << curr_TID << "|thread_id: " << thread_id << dec << std::endl;
-            New << "curr_satp: "<< hex << curr_satp << "| new_satp: " << new_satp << dec << std::endl;
+            New << "curr_satp: "<< hex  << curr_satp << "| from_a6: " << rest.substr(rest.find("D=") + 2, 18) << std::endl;
+            New << "curr_TID: " << curr_TID << "|thread_id: " << thread_id << std::endl;
+            New << "curr_satp: " << curr_satp << "| new_satp: " << new_satp << dec << std::endl;
             New << "Maps: " << std::endl;
             for (auto SATP : process_map){
                 for (auto TID : SATP.second.thread_map){
                     New << "SATP: " << SATP.first << "| TID: " << TID.first << std::endl;
                 }
             }
-            if (rest.substr(rest.find("D=") + 2, 18) != curr_satp){
-                Process curr_process =  process_map.at(curr_satp);
-                string find_a6 = rest.substr(rest.find("D=") + 2, 18);
+            unsigned long long find_a6 = std::stoul(rest.substr(rest.find("D=") + 2, 18), nullptr, 16);
+            if (find_a6 != curr_satp){
+                //Process curr_process =  process_map.at(curr_satp);
+                Process buffer_process = process_map.at(curr_satp);
+                //std::map<unsigned long long, Process>::iterator it;
                 New << "1" << std::endl;
-                Process buffer_process = curr_process;
-                std::map<string, Process>::iterator it;
+                buffer_process.overwritten_SATP = curr_satp;
                 /*
                 Process buffer_process;
                 New << "2" << std::endl;
@@ -236,8 +238,8 @@ int main() {
                 buffer_process = curr_process;
                 */
                 New << "2" << std::endl;
-                New << process_map.count(curr_satp) << std::endl;
-                it = process_map.find(curr_satp); 
+                //New << process_map.count(curr_satp) << std::endl;
+                //it = process_map.find(curr_satp); 
                 //New << std::distance(it, process_map.begin()) << std::endl;
                 New << "3" << std::endl;//free(): invalid size
                 //for (auto TID : buffer_process.thread_map){
@@ -252,10 +254,10 @@ int main() {
                     }
                 }
                 New << "4" << std::endl;
-                process_map.erase(it);
+                //process_map.erase(it);// the erase does not work (Segmentation fault), so instead a find and replace #FIXME
                 New << "5" << std::endl;
-                New << "6" << std::endl;
                 curr_satp = find_a6;
+                New << "6" << std::endl;
             }
         }
         /*
@@ -269,7 +271,7 @@ int main() {
             //process_map.at(curr_satp).last_TID=curr_TID;
             context_switched = true;
             bool empty = true;
-            new_satp  = rest.substr(rest.find("D=") + 2, 18);//find value in a6 to switch to
+            new_satp  = std::stoul(rest.substr(rest.find("D=") + 2, 18), nullptr, 16);//find value in a6 to switch to
             for (auto SATP : process_map){
                 if (SATP.first == new_satp) {
                     //curr_satp = new_satp;
