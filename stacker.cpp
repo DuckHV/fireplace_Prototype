@@ -11,18 +11,6 @@
 using namespace std;
 
 
-/*        
-struct Call<'n> {
-    func: &'n str,
-    addr: usize,
-    org_time: u64,
-    time: u64,
-    /// Time spent in the called subroutines
-    child_duration: u64,
-}
-Call call1;
-*/
-
 struct Call {
     string func; //name/symbol
     size_t addr; //start address
@@ -32,15 +20,6 @@ struct Call {
     /// Time spent in the called subroutines
     unsigned long long child_duration;
 };
-
-/*
-struct Thread<'n> {
-    stack: Vec<Call<'n>>,
-    switched: u64,
-    last_func: usize,
-    last_addr: usize,
-}
-*/
 
 struct Thread{
     vector<Call> stack;
@@ -78,7 +57,6 @@ void print_Stack(fstream& New, Thread thread_curr, unsigned long long longTick){
                 New << thread_curr.stack[i].bin + thread_curr.stack[i].func;  
             }
         }
-    //New << "|" << longTick << "|" << thread_curr.stack.back().time << "|" << thread_curr.stack.back().child_duration; //debug
     New << " " << longTick - (thread_curr.stack.back().time + thread_curr.stack.back().child_duration) << std::endl;
     }
 }
@@ -90,7 +68,6 @@ int main() {
     string pathBin;// input Binary-file
     vector<string> pathsBins;// save all Binary-File
     int curr_bin;
-    //int fiasco_bin;
     bool context_switched = false; //when a context switch happened -> start new thread after fiasco finished
     unsigned long long thread_id;
 
@@ -123,10 +100,8 @@ int main() {
     
 
     unsigned long long const RESERVE = 100;
-    // init first thread with id 0
-    unsigned long long curr_TID = 0;
+    unsigned long long curr_TID = 0;// init first thread with id 0
     Thread init_Thread;
-    //init_Thread.stack.reserve(RESERVE);
     map<unsigned long long, Thread> thread_map; //string = value from D=..., sid, a sid per Thread
     thread_map.insert({curr_TID, init_Thread});
     thread_map.at(curr_TID).stack.reserve(RESERVE);
@@ -138,11 +113,6 @@ int main() {
     getline(cin, pathLog);
     ifstream Log (pathLog);
     getline(Log, firstline); //skip first line of Log
-
-    /*
-    std::cout << "Input path to Binary(fiasco): ";
-    getline(cin, pathbin); //pathbin[0] is fiasco
-    */
 
     std::cout << "Input path(s) to Binary (fiasco): "; //pathbin[0] is fiasco
     while (getline(cin, pathBin) && !pathBin.empty()){
@@ -172,7 +142,6 @@ int main() {
 
 
     New.open("OutputStack.folded", fstream::out);
-    //New << "please print";
     while (getline(Log, tick, ':')){ // get tick, till first : //limiter: && stoul(tick) <= 4776000 4764000 3816500
         //New << "Tick: " << stoul(tick) << "\n";
         longTick = stoul(tick);
@@ -226,9 +195,7 @@ int main() {
         if (context_switched && 0 != curr_bin){ //there was a context switch and leaving fiasco
             //New << "cs" << std::endl;
             thread_map.at(curr_TID).switched = longTick;
-            //thread_map.at(curr_TID) = thread_curr; // stash old thread back into thread_map
             curr_TID = thread_id; //change curr_TID to new ID
-            //thread_curr = thread_map.at(curr_TID);
             thread_map.at(curr_TID).stack.reserve(RESERVE);
             thread_map.at(curr_TID).resume(longTick);
             context_switched = false;
@@ -243,22 +210,16 @@ int main() {
             curr_TID = std::stoul(rest.substr(rest.find("D=") + 2, 18), nullptr, 16); //find in rest, after D= //is that good thread_id?
             thread_map.insert({curr_TID, thread_buffer});
             Thread& thread_curr = thread_map.at(curr_TID);
-            //thread_map.at(curr_TID).stack.reserve(RESERVE);
-            //thread_curr = thread_map.at(curr_TID);
             thread_curr.stack.reserve(RESERVE);           
         }
          
-
-        //cout << "ts\n";
         //detect switch thread, can only happen in fiasco
         if (symbol.find("_skip_save_kernel_sptp78") != string::npos  && instruction.find("c_ldsp sp, 16(sp)") != string::npos){ // c_ldsp t0, 0(sp)? ld sp, 16(a1)return_from_user_invoke|| symbol.find("return_from_exception") != string::npos)
             thread_id = std::stoul(rest.substr(rest.find("D=") + 2, 18), nullptr, 16);//find in rest, after D=; //is that good thread_id?
             context_switched = true;
             bool empty = true;
-            //fiasco_bin = curr_bin; // function can only happen when binary is fiasco
             for (auto search : thread_map){
                 if(thread_id >= search.first && thread_id < search.first + STACK_SIZE){
-                    //thread_curr = thread_map.at(search.first);
                     thread_id = search.first;
                     empty =  false;
                     break;
@@ -266,21 +227,15 @@ int main() {
             }
             if (empty){
                 Thread thread_new;
-                //thread_new.stack.reserve(RESERVE);
                 thread_map.insert({thread_id, thread_new}); // create new thread with new ID in thread_map   
                 thread_map.at(thread_id).stack.reserve(RESERVE);
             }
-            /*for (auto search : thread_map){
-                New << hex << search.first << dec << std::endl;
-            }*/ //debug
-            //cout << "New ID: " << thread_id << std::endl;
         }
         
         Thread& thread_curr = thread_map.at(curr_TID);
 
         //stack call on thread
         if (thread_curr.stack.size() == 0){ //beginn stack
-            //string binSymbol = namesBins.at(curr_bin) + symbol;
             Call call = (Call){symbol, addr, namesBins.at(curr_bin), longTick, longTick, 0};
             thread_curr.stack.push_back(call);
             thread_curr.last_addr = addr;
@@ -322,7 +277,6 @@ int main() {
                 } else { //it was a big jump
                     //std::cout << "jump" << "\n"; //debug
                 }
-                //string binSymbol = namesBins.at(curr_bin) + symbol;
                 Call call = (Call){symbol, addr, namesBins.at(curr_bin), longTick, longTick, 0};
                 thread_curr.stack.push_back(call);
                 thread_curr.last_addr = addr;
@@ -340,7 +294,6 @@ int main() {
                 thread_curr.popstack(longTick);
 
                 while (!thread_curr.stack.empty()) {// unwind until former func in stack is reached or unwind arrived at different binary
-                    //New << "namesBins: " << namesBins.at(curr_bin) << " stack.bin: " << thread_curr.stack.back().bin << std::endl;
                     if (symbol == thread_curr.stack.back().func){
                         break;
                     } else if (namesBins.at(curr_bin) != thread_curr.stack.back().bin && oldinst.find("sret") == string::npos){ //make an exception and push call to stack, when all functions of a binary have been cleared and no return from exception
@@ -363,25 +316,13 @@ int main() {
         }
         
         oldinst = instruction;
-        //thread_map.at(curr_TID) = thread_curr;
-        /*
-        for (auto ID : thread_map){
-            Thread &thread_curr = ID.second;
-            if (ID.first != curr_TID){
-                thread_curr.resume(longTick);
-                //ID.second.resume(longTick);
-            }
-            New << "thread: " << thread_curr.stack.capacity() << "|map: " << thread_map.at(ID.first).stack.capacity() << std::endl;
-            print_Stack(New, thread_curr, longTick);
-        }
-        */
+        
     }
     //cout << "finished reading\n";
     for (auto ID : thread_map){
         Thread &thread_curr = ID.second;
         if (ID.first != curr_TID){
             thread_curr.resume(longTick);
-            //ID.second.resume(longTick);
         }
         print_Stack(New, thread_curr, longTick);
         
