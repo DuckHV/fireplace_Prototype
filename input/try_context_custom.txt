@@ -1,0 +1,16 @@
+blablabla
+0: system.cpu: T0 : 0x80000000 @_start    : add s0, a0, zero           : IntAlu :  D=0x0000000000000000
+2000: system.cpu: T0 : 0x80000678. 1 @fw_boot_hart    : c_li a0, -1                : IntAlu :  D=0xffffffffffffffff
+7000: system.cpu: T0 : 0x8000002a @_try_lottery    : auipc a6, 64               : IntAlu :  D=0x000000008004002a
+8000: system.cpu: T0 : 0x80000000 @_start    : add s0, a0, zero           : IntAlu :  D=0x0000000000000000
+10000: system.cpu: T0 : 0x80000678 @fw_boot_hart    : c_li a0, -1                : IntAlu :  D=0xffffffffffffffff
+10500: system.cpu: T0 : 0xfffffff0000547ba @payload_bin+18446744002840840184    : mv a0, a1          : MemRead :  D=0x00000000801ffd00 A=0xfffffff041ec5ee0
+11000: system.cpu: T0 : 0xfffffff0000547f8 @payload_bin+18446744002840840184    : c_ldsp sp, 16(sp)          : MemRead :  D=0x00000000801ffd00 A=0xfffffff041ec5ee0
+12000: system.cpu: T0 : 0x8001a0ee @fdt_path_offset_namelen    : c_addi16sp sp, -80         : IntAlu :  D=0x0000000080046f00
+13000: system.cpu: T0 : 0x80000678 @fw_boot_hart    : c_li a0, -1                : IntAlu :  D=0xffffffffffffffff
+14000: system.cpu: T0 : 0x8000002a @_try_lottery    : auipc a6, 64               : IntAlu :  D=0x000000008004002a
+15000: system.cpu: T0 : 0x80000000 @_start    : add s0, a0, zero           : IntAlu :  D=0x0000000000000000
+16000: system.cpu: T0 : 0x80000678 @fw_boot_hart    : c_li a0, -1                : IntAlu :  D=0xffffffffffffffff
+16500: system.cpu: T0 : 0xfffffff0000547ba @payload_bin+18446744002840840184    : mv a0, a1          : MemRead :  D=0x00000000801ffd00 A=0xfffffff041ec5ee0
+17000: system.cpu: T0 : 0xfffffff0000547f8 @payload_bin+18446744002840840184    : c_ldsp sp, 16(sp)          : MemRead :  D=0x0000000000000000 A=0xfffffff041ec5ee0
+18000: system.cpu: T0 : 0x8001a0ee @fdt_path_offset_namelen    : c_addi16sp sp, -80         : IntAlu :  D=0x0000000080016f00
