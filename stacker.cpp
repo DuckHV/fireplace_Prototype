@@ -68,6 +68,17 @@ void print_Stack(fstream& New, Thread thread_curr, unsigned long long longTick){
     }
 }
 
+//extract here the new SATP from a6
+bool satp_from_a6(string instruction, string symbol){
+    if (instruction.find("or a6, t0, t5") != string::npos && symbol.find("switchin_context_label") != string::npos){
+        return true;
+    } else if (instruction.find("or a6, t2, s0") != string::npos && symbol.find("Mem_unit::init_asids()") != string::npos){
+        return true;
+    } else {
+        return false;
+    }
+}
+
 
 int main() {
     
@@ -207,7 +218,7 @@ int main() {
 
         size_t addr = std::stoul(fulladdr, nullptr, 16);
 
-        
+        /*the following is completly false
         //swap SATP in process_map, which was changed during application
         if (instruction.find("c_sdsp a6, 128(sp)") != string::npos && symbol == "_save_trap_state0"){
             New << "swapSATP" << std::endl;
@@ -236,7 +247,7 @@ int main() {
                 
                 New << "3" << std::endl;
                 buffer_process = curr_process;
-                */
+                
                 New << "2" << std::endl;
                 //New << process_map.count(curr_satp) << std::endl;
                 //it = process_map.find(curr_satp); 
@@ -260,18 +271,31 @@ int main() {
                 New << "6" << std::endl;
             }
         }
+        */
         /*
         //
         if (instruction.find("csrrw zero, satp, a6") != string::npos && symbol == "switchin_context_label"){
             process_switched = true;
         }*/
+        //assign actual SATP, when still SATP=0
+        if (instruction.find("csrrw zero, satp, a6") != string::npos && symbol == "Mem_unit::init_asids()"){ 
+            Process buffer_process = process_map.at(curr_satp);
+            process_map.erase(curr_satp);
+            process_map.at(new_satp) = buffer_process;
+            
+        }
+        //find new SATP
+        if (satp_from_a6(instruction, symbol)){// || (instruction.find("or a6, t2, s0") != string::npos && symbol == "Mem_unit::init_asids()")
+            new_satp  = std::stoul(rest.substr(rest.find("D=") + 2, 18), nullptr, 16);//find value in a6 to switch to
+        }
+        
         //process switch, after actually getting new SATP from a6
-        if (instruction.find("c_ldsp a6, 128(sp)") != string::npos && symbol == "_skip_save_kernel_sptp78"){ 
+        if (instruction.find("csrrw zero, satp, a6") != string::npos && symbol.find("switchin_context_label") != string::npos){ 
             New << "ps" << std::endl;
             //process_map.at(curr_satp).last_TID=curr_TID;
             context_switched = true;
             bool empty = true;
-            new_satp  = std::stoul(rest.substr(rest.find("D=") + 2, 18), nullptr, 16);//find value in a6 to switch to
+            //new_satp  = std::stoul(rest.substr(rest.find("D=") + 2, 18), nullptr, 16);//find value in a6 to switch to
             for (auto SATP : process_map){
                 if (SATP.first == new_satp) {
                     //curr_satp = new_satp;
