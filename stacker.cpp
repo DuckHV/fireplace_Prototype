@@ -79,6 +79,16 @@ bool satp_from_a6(string instruction, string symbol){
     }
 }
 
+bool change_satp(string instruction, string symbol){
+    if (instruction.find("csrrw zero, satp, a6") != string::npos && symbol.find("switchin_context_label") != string::npos){
+        return true;
+    } else if (instruction.find("csrrw zero, satp, a6") != string::npos && symbol.find("Mem_unit::init_asids()") != string::npos){
+        return true;
+    } else {
+        return false;
+    }
+}
+
 
 int main() {
     
@@ -277,8 +287,8 @@ int main() {
         if (instruction.find("csrrw zero, satp, a6") != string::npos && symbol == "switchin_context_label"){
             process_switched = true;
         }*/
-        //assign actual SATP, when still SATP=0
-        if (instruction.find("csrrw zero, satp, a6") != string::npos && symbol == "Mem_unit::init_asids()"){ 
+        //assign actual SATP, when still SATP=0, use this for first SATP
+        if (change_satp(instruction, symbol) && curr_satp == 0){ 
             Process buffer_process = process_map.at(curr_satp);
             process_map.erase(curr_satp);
             process_map.at(new_satp) = buffer_process;
@@ -286,6 +296,7 @@ int main() {
         }
         //find new SATP
         if (satp_from_a6(instruction, symbol)){// || (instruction.find("or a6, t2, s0") != string::npos && symbol == "Mem_unit::init_asids()")
+            New << rest.substr(rest.find("D=") + 2, 18) << std::endl;
             new_satp  = std::stoul(rest.substr(rest.find("D=") + 2, 18), nullptr, 16);//find value in a6 to switch to
         }
         
@@ -311,12 +322,25 @@ int main() {
             }
         }
         
-        //Process& curr_process =  process_map.at(curr_satp);        
+        //Process& curr_process =  process_map.at(curr_satp);
+        //detect first sp assign 
+        if (curr_TID == 0 && ((instruction.find("c_addi sp,") != string::npos) || (instruction.find("c_addi16sp sp,") != string::npos))){
+            New << "spassign" << std::endl;
+            Process& curr_process =  process_map.at(curr_satp);
+            Thread thread_buffer;
+            thread_buffer.stack.reserve(RESERVE);
+            thread_buffer = curr_process.thread_map.at(curr_TID);
+            curr_process.thread_map.erase(curr_TID);// #abort: corrupted size vs. prev_size
+            curr_TID = std::stoul(rest.substr(rest.find("D=") + 2, 18), nullptr, 16); //find in rest, after D= //is that good thread_id?
+            curr_process.thread_map.insert({curr_TID, thread_buffer});
+            curr_process.thread_map.at(curr_TID).stack.reserve(RESERVE);        
+        }        
                 
         //detect switch thread, can only happen in fiasco
         if (symbol.find("_skip_save_kernel_sptp78") != string::npos  && instruction.find("c_ldsp sp, 16(sp)") != string::npos){ // c_ldsp t0, 0(sp)? ld sp, 16(a1)return_from_user_invoke|| symbol.find("return_from_exception") != string::npos)
             New << "ts" << std::endl;
             Process& curr_process =  process_map.at(new_satp);// the process/SATP might have changed beforehand, so the change applies for the next process
+            New << rest.substr(rest.find("D=") + 2, 18) << std::endl;
             thread_id = std::stoul(rest.substr(rest.find("D=") + 2, 18), nullptr, 16);//find in rest, after D=; //is that good thread_id?
             context_switched = true;
             bool empty = true;
@@ -353,18 +377,7 @@ int main() {
             context_switched = false;
         }
 
-        //detect first sp assign 
-        if (curr_TID == 0 && ((instruction.find("c_addi sp,") != string::npos) || (instruction.find("c_addi16sp sp,") != string::npos))){
-            New << "spassign" << std::endl;
-            Process& curr_process =  process_map.at(curr_satp);
-            Thread thread_buffer;
-            thread_buffer.stack.reserve(RESERVE);
-            thread_buffer = curr_process.thread_map.at(curr_TID);
-            curr_process.thread_map.erase(curr_TID);// #abort: corrupted size vs. prev_size
-            curr_TID = std::stoul(rest.substr(rest.find("D=") + 2, 18), nullptr, 16); //find in rest, after D= //is that good thread_id?
-            curr_process.thread_map.insert({curr_TID, thread_buffer});
-            curr_process.thread_map.at(curr_TID).stack.reserve(RESERVE);        
-        }
+        
 
         Thread& thread_curr = process_map.at(curr_satp).thread_map[curr_TID];
         
