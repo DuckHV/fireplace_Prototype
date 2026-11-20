@@ -180,8 +180,7 @@ int main() {
 
     New.open("OutputStack.folded", fstream::out);
     while (getline(Log, tick, ':')){ // get tick, till first : //limiter: && stoul(tick) <= 4776000 4764000 3816500
-        //New << "Tick: " << stoul(tick) << "\n";
-        New << "Tick: " << stoul(tick) << std::endl;
+        //New << "Tick: " << stoul(tick) << std::endl;
         longTick = stoul(tick);
         getline(Log, place, ':'); // get place
         getline(Log, thread, ':'); // get thread
@@ -294,13 +293,13 @@ int main() {
         */
         //find new SATP
         if (satp_from_a6(instruction, symbol)){// || (instruction.find("or a6, t2, s0") != string::npos && symbol == "Mem_unit::init_asids()")
-            New << rest.substr(rest.find("D=") + 2, 18) << std::endl;
+            //New << rest.substr(rest.find("D=") + 2, 18) << std::endl;
             new_satp  = std::stoul(rest.substr(rest.find("D=") + 2, 18), nullptr, 16);//find value in a6 to switch to
         }
         
         //process switch, after actually getting new SATP from a6
         if (change_satp(instruction, symbol)){ 
-            New << "ps" << std::endl;
+            //New << "ps" << std::endl;
             //process_map.at(curr_satp).last_TID=curr_TID;
             context_switched = true;
             bool empty = true;
@@ -323,7 +322,7 @@ int main() {
         //Process& curr_process =  process_map.at(curr_satp);
         //detect first sp assign 
         if (curr_TID == 0 && ((instruction.find("c_addi sp,") != string::npos) || (instruction.find("c_addi16sp sp,") != string::npos))){
-            New << "spassign" << std::endl;
+            //New << "spassign" << std::endl;
             Process& curr_process =  process_map.at(curr_satp);
             Thread thread_buffer;
             thread_buffer.stack.reserve(RESERVE);
@@ -336,9 +335,9 @@ int main() {
                 
         //detect switch thread, can only happen in fiasco
         if (symbol.find("_skip_save_kernel_sptp78") != string::npos  && instruction.find("c_ldsp sp, 16(sp)") != string::npos){ // c_ldsp t0, 0(sp)? ld sp, 16(a1)return_from_user_invoke|| symbol.find("return_from_exception") != string::npos)
-            New << "ts" << std::endl;
+            //New << "ts" << std::endl;
             Process& curr_process =  process_map.at(new_satp);// the process/SATP might have changed beforehand, so the change applies for the next process
-            New << rest.substr(rest.find("D=") + 2, 18) << std::endl;
+            //New << rest.substr(rest.find("D=") + 2, 18) << std::endl;
             thread_id = std::stoul(rest.substr(rest.find("D=") + 2, 18), nullptr, 16);//find in rest, after D=; //is that good thread_id?
             context_switched = true;
             bool empty = true;
@@ -358,6 +357,7 @@ int main() {
                 
         //context switch: switch thread on exit fiasco / start application 
         if (context_switched && 0 != curr_bin){ //there was a context switch and leaving fiasco
+            /*
             New << "cs" << std::endl;
             New << "curr_TID: "<< hex << curr_TID << "|thread_id: " << thread_id << dec << std::endl;
             New << "curr_satp: "<< hex << curr_satp << "|new_satp: " << new_satp << dec << std::endl;
@@ -367,6 +367,7 @@ int main() {
                     New << "SATP: " << SATP.first << "| TID: " << TID.first << std::endl;
                 }
             }
+            */
             process_map.at(curr_satp).thread_map.at(curr_TID).switched = longTick;
             process_map.at(new_satp).thread_map.at(thread_id).stack.reserve(RESERVE);
             process_map.at(new_satp).thread_map.at(thread_id).resume(longTick);
@@ -379,7 +380,7 @@ int main() {
 
         Thread& thread_curr = process_map.at(curr_satp).thread_map[curr_TID];
         
-        New << "curr_satp: " << curr_satp << " | curr_TID: " << curr_TID << std::endl;
+        //New << "curr_satp: " << curr_satp << " | curr_TID: " << curr_TID << std::endl;
 
         //stack call on thread
         if (thread_curr.stack.size() == 0){ //beginn stack
@@ -464,7 +465,7 @@ int main() {
         }
         
         oldinst = instruction;
-        New << "looped" << std::endl;
+        //New << "looped" << std::endl;
         /*
         New << "current TID: " << hex << curr_TID << dec << "\n";
         cout << "current TID: " << hex << curr_TID << dec << "\n";
