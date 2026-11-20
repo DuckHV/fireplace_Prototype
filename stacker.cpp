@@ -213,7 +213,7 @@ int main() {
                 symbol = symbol_buffer;
                 getline(addr2line, file);
             }
-            system("rm address.txt");//remove address.txt
+            //system("rm address.txt");//remove address.txt
 
             //check here if name is resolved
             if (symbol == "??"){
@@ -228,7 +228,8 @@ int main() {
 
         size_t addr = std::stoul(fulladdr, nullptr, 16);
 
-        /*the following is completly false
+        /* 
+        the following is completly false
         //swap SATP in process_map, which was changed during application
         if (instruction.find("c_sdsp a6, 128(sp)") != string::npos && symbol == "_save_trap_state0"){
             New << "swapSATP" << std::endl;
@@ -248,7 +249,7 @@ int main() {
                 //std::map<unsigned long long, Process>::iterator it;
                 New << "1" << std::endl;
                 buffer_process.overwritten_SATP = curr_satp;
-                /*
+                
                 Process buffer_process;
                 New << "2" << std::endl;
                 for (auto TID : buffer_process.thread_map){
@@ -283,17 +284,14 @@ int main() {
         }
         */
         /*
-        //
-        if (instruction.find("csrrw zero, satp, a6") != string::npos && symbol == "switchin_context_label"){
-            process_switched = true;
-        }*/
         //assign actual SATP, when still SATP=0, use this for first SATP
         if (change_satp(instruction, symbol) && curr_satp == 0){ 
             Process buffer_process = process_map.at(curr_satp);
-            process_map.erase(curr_satp);
+            //process_map.erase(curr_satp);
             process_map.at(new_satp) = buffer_process;
             
         }
+        */
         //find new SATP
         if (satp_from_a6(instruction, symbol)){// || (instruction.find("or a6, t2, s0") != string::npos && symbol == "Mem_unit::init_asids()")
             New << rest.substr(rest.find("D=") + 2, 18) << std::endl;
@@ -301,7 +299,7 @@ int main() {
         }
         
         //process switch, after actually getting new SATP from a6
-        if (instruction.find("csrrw zero, satp, a6") != string::npos && symbol.find("switchin_context_label") != string::npos){ 
+        if (change_satp(instruction, symbol)){ 
             New << "ps" << std::endl;
             //process_map.at(curr_satp).last_TID=curr_TID;
             context_switched = true;
@@ -410,7 +408,7 @@ int main() {
                 getline(addr2linecheck,filecheck);
             }
             
-            system("rm address-1.txt");
+            //system("rm address-1.txt");
 
             if (symbol != symbolcheck){// it's a beginning, a beginning means a jump to new func
                 //New << "thread_curr: capacity: " << thread_curr.stack.capacity() << "|size: " << thread_curr.stack.size() << std::endl;
@@ -496,6 +494,8 @@ int main() {
 
     Log.close();
     New.close();
+    system("rm address.txt");//remove address.txt
+    system("rm address-1.txt");
     std::cout << "\n finished task \n";
     return 0;
 }
