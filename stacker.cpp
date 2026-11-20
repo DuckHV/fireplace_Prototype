@@ -126,7 +126,6 @@ int main() {
     unsigned long long new_satp = 0;
     unsigned long long thread_id = 0;
 
-    //bool process_switched = false;
     unsigned long long curr_satp = new_satp;
     Process process;
     process.overwritten_SATP = 0;
@@ -140,7 +139,6 @@ int main() {
     Thread init_Thread;
     process_map.at(curr_satp).thread_map.insert({curr_TID, init_Thread});
     process_map.at(curr_satp).thread_map.at(curr_TID).stack.reserve(RESERVE);
-    //process_map.at(curr_satp).last_TID = curr_TID;
 
     unsigned long long const STACK_SIZE = 0x20000;
     
@@ -151,7 +149,6 @@ int main() {
     getline(Log, firstline); //skip first line of Log
 
     std::cout << "Input path(s) to Binary (fiasco): "; //pathbin[0] is fiasco
-    std::cout << "Input path to Binary (fiasco): ";
     while (getline(cin, pathBin) && !pathBin.empty()){
         pathsBins.push_back(pathBin);
         std::cout << "Other path to Binary: ";
@@ -212,7 +209,6 @@ int main() {
                 symbol = symbol_buffer;
                 getline(addr2line, file);
             }
-            //system("rm address.txt");//remove address.txt
 
             //check here if name is resolved
             if (symbol == "??"){
@@ -227,86 +223,18 @@ int main() {
 
         size_t addr = std::stoul(fulladdr, nullptr, 16);
 
-        /* 
-        the following is completly false
-        //swap SATP in process_map, which was changed during application
-        if (instruction.find("c_sdsp a6, 128(sp)") != string::npos && symbol == "_save_trap_state0"){
-            New << "swapSATP" << std::endl;
-            New << "curr_satp: "<< hex  << curr_satp << "| from_a6: " << rest.substr(rest.find("D=") + 2, 18) << std::endl;
-            New << "curr_TID: " << curr_TID << "|thread_id: " << thread_id << std::endl;
-            New << "curr_satp: " << curr_satp << "| new_satp: " << new_satp << dec << std::endl;
-            New << "Maps: " << std::endl;
-            for (auto SATP : process_map){
-                for (auto TID : SATP.second.thread_map){
-                    New << "SATP: " << SATP.first << "| TID: " << TID.first << std::endl;
-                }
-            }
-            unsigned long long find_a6 = std::stoul(rest.substr(rest.find("D=") + 2, 18), nullptr, 16);
-            if (find_a6 != curr_satp){
-                //Process curr_process =  process_map.at(curr_satp);
-                Process buffer_process = process_map.at(curr_satp);
-                //std::map<unsigned long long, Process>::iterator it;
-                New << "1" << std::endl;
-                buffer_process.overwritten_SATP = curr_satp;
-                
-                Process buffer_process;
-                New << "2" << std::endl;
-                for (auto TID : buffer_process.thread_map){
-                    TID.second.stack.reserve(RESERVE);
-                }
-                
-                New << "3" << std::endl;
-                buffer_process = curr_process;
-                
-                New << "2" << std::endl;
-                //New << process_map.count(curr_satp) << std::endl;
-                //it = process_map.find(curr_satp); 
-                //New << std::distance(it, process_map.begin()) << std::endl;
-                New << "3" << std::endl;//free(): invalid size
-                //for (auto TID : buffer_process.thread_map){
-                //    New << "curr_satp: "<< process_map.count(curr_satp) << "| TID: " << process_map.at(curr_satp).thread_map.count(TID.first) << std::endl;
-                //    process_map.at(curr_satp).thread_map.erase(TID.first);
-                //    New << "erased" << std::endl;
-                //}
-                process_map.insert({find_a6, buffer_process});
-                for (auto SATP : process_map){
-                for (auto TID : SATP.second.thread_map){
-                    New << "SATP: " << SATP.first << "| TID: " << TID.first << std::endl;
-                    }
-                }
-                New << "4" << std::endl;
-                //process_map.erase(it);// the erase does not work (Segmentation fault), so instead a find and replace #FIXME
-                New << "5" << std::endl;
-                curr_satp = find_a6;
-                New << "6" << std::endl;
-            }
-        }
-        */
-        /*
-        //assign actual SATP, when still SATP=0, use this for first SATP
-        if (change_satp(instruction, symbol) && curr_satp == 0){ 
-            Process buffer_process = process_map.at(curr_satp);
-            //process_map.erase(curr_satp);
-            process_map.at(new_satp) = buffer_process;
-            
-        }
-        */
         //find new SATP
         if (satp_from_a6(instruction, symbol)){// || (instruction.find("or a6, t2, s0") != string::npos && symbol == "Mem_unit::init_asids()")
-            //New << rest.substr(rest.find("D=") + 2, 18) << std::endl;
             new_satp  = std::stoul(rest.substr(rest.find("D=") + 2, 18), nullptr, 16);//find value in a6 to switch to
         }
         
         //process switch, after actually getting new SATP from a6
         if (change_satp(instruction, symbol)){ 
             //New << "ps" << std::endl;
-            //process_map.at(curr_satp).last_TID=curr_TID;
             context_switched = true;
             bool empty = true;
-            //new_satp  = std::stoul(rest.substr(rest.find("D=") + 2, 18), nullptr, 16);//find value in a6 to switch to
             for (auto SATP : process_map){
                 if (SATP.first == new_satp) {
-                    //curr_satp = new_satp;
                     empty = false;
                     break;
                 }
@@ -314,12 +242,10 @@ int main() {
             if (empty){
                 Process new_process;
                 process_map.insert({new_satp,new_process});
-                process_map.at(new_satp).thread_map.insert({0, init_Thread});   
-                //curr_satp = new_satp;
+                process_map.at(new_satp).thread_map.insert({0, init_Thread});
             }
         }
         
-        //Process& curr_process =  process_map.at(curr_satp);
         //detect first sp assign 
         if (curr_TID == 0 && ((instruction.find("c_addi sp,") != string::npos) || (instruction.find("c_addi16sp sp,") != string::npos))){
             //New << "spassign" << std::endl;
@@ -337,7 +263,6 @@ int main() {
         if (symbol.find("_skip_save_kernel_sptp78") != string::npos  && instruction.find("c_ldsp sp, 16(sp)") != string::npos){ // c_ldsp t0, 0(sp)? ld sp, 16(a1)return_from_user_invoke|| symbol.find("return_from_exception") != string::npos)
             //New << "ts" << std::endl;
             Process& curr_process =  process_map.at(new_satp);// the process/SATP might have changed beforehand, so the change applies for the next process
-            //New << rest.substr(rest.find("D=") + 2, 18) << std::endl;
             thread_id = std::stoul(rest.substr(rest.find("D=") + 2, 18), nullptr, 16);//find in rest, after D=; //is that good thread_id?
             context_switched = true;
             bool empty = true;
@@ -352,22 +277,10 @@ int main() {
                 Thread thread_new;
                 curr_process.thread_map.insert({thread_id, thread_new}); // create new thread with new ID in thread_map   
             }
-            //New << "New ID: " << hex << thread_id << dec << std::endl;
         }
                 
         //context switch: switch thread on exit fiasco / start application 
         if (context_switched && 0 != curr_bin){ //there was a context switch and leaving fiasco
-            /*
-            New << "cs" << std::endl;
-            New << "curr_TID: "<< hex << curr_TID << "|thread_id: " << thread_id << dec << std::endl;
-            New << "curr_satp: "<< hex << curr_satp << "|new_satp: " << new_satp << dec << std::endl;
-            New << "Maps: " << std::endl;
-            for (auto SATP : process_map){
-                for (auto TID : SATP.second.thread_map){
-                    New << "SATP: " << SATP.first << "| TID: " << TID.first << std::endl;
-                }
-            }
-            */
             process_map.at(curr_satp).thread_map.at(curr_TID).switched = longTick;
             process_map.at(new_satp).thread_map.at(thread_id).stack.reserve(RESERVE);
             process_map.at(new_satp).thread_map.at(thread_id).resume(longTick);
@@ -379,8 +292,6 @@ int main() {
         
 
         Thread& thread_curr = process_map.at(curr_satp).thread_map[curr_TID];
-        
-        //New << "curr_satp: " << curr_satp << " | curr_TID: " << curr_TID << std::endl;
 
         //stack call on thread
         if (thread_curr.stack.size() == 0){ //beginn stack
@@ -408,11 +319,8 @@ int main() {
                 symbolcheck = symbolcheck_buffer;
                 getline(addr2linecheck,filecheck);
             }
-            
-            //system("rm address-1.txt");
 
             if (symbol != symbolcheck){// it's a beginning, a beginning means a jump to new func
-                //New << "thread_curr: capacity: " << thread_curr.stack.capacity() << "|size: " << thread_curr.stack.size() << std::endl;
                 if (symbolcheck == thread_curr.stack.back().func){ //old func (at fulladdr - 1) continues into new func (at fulladdr = addr)       
                     if (thread_curr.stack.size() == 0){ 
                         //std::cout << "stack is empty \n";     
@@ -465,20 +373,6 @@ int main() {
         }
         
         oldinst = instruction;
-        //New << "looped" << std::endl;
-        /*
-        New << "current TID: " << hex << curr_TID << dec << "\n";
-        cout << "current TID: " << hex << curr_TID << dec << "\n";
-        for (auto SATP : process_map){
-            for (auto TID : SATP.second.thread_map){
-                if (TID.first != curr_TID){
-                    TID.second.resume(longTick);
-                }
-                New << SATP.first << ": " << hex << TID.first << dec << ":\n";
-                print_Stack(New, TID.second, longTick);
-            }
-        }
-        */
     }
     //cout << "finished reading\n";
     // final print of all threads at end of file
@@ -487,7 +381,6 @@ int main() {
             if (TID.first != curr_TID && SATP.first != curr_satp){
                     TID.second.resume(longTick);
             }
-            //New << SATP.first << ": " << hex << TID.first << dec << ":\n";
             print_Stack(New, TID.second, longTick);
         }
     }
